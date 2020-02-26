@@ -40,29 +40,32 @@ teste kode da vi ikke lenger er nødt til å mocke resten av universet.
 > You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
 > -Joe Armstrong
 
-```javascript
-function agePersonPure(person) {
-    return new Person(person.name, person.age + 1);
+```java
+class Example {
+    Pokemon levelUpPure(Pokemon pokemon) {
+        return new Pokemon(pokemon.type, pokemon.level + 1);
+    }
+
+    void pureExample() {
+        Pokemon purePokemon = new Pokemon("Pikachu", 10);
+        Pokemon slightlyStrongerPurePokemon = levelUpPure(purePokemon);
+        Pokemon anotherSlightlyStrongerPurePokemon = levelUpPure(purePokemon);
+        // purePokemon: Pokemon {type: "Pikachu", level: 10}
+        // slightlyStrongerPurePokemon: Pokemon {type: "Pikachu", level: 11}
+        // anotherSlightlyStrongerPurePokemon: Pokemon {type: "Pikachu", level: 11}
+    }
+
+    void levelUpImpure(Pokemon pokemon) {
+        pokemon.level = pokemon.level + 1;
+    }
+    
+    void impureExample() {
+        Pokemon impurePokemon = new Pokemon("Grimer", 10);
+        levelUpImpure(impurePokemon);
+        levelUpImpure(impurePokemon);
+        // inpurePokemon: Pokemon {type: "Grimer", level: 12}
+    }
 }
-
-const purePerson = new Person("Ola Normann", 50);
-const slightlyOlderPurePerson = agePersonPure(purePerson);
-const anotherSlightlyOlderPurePerson = agePersonPure(purePerson);
-
-// purePerson: Person {name: "Ola Normann", age: 50}
-// slightlyOlderPurePerson: Person {name: "Ola Normann", age: 51}
-// anotherSlightlyOlderPurePerson: Person {name: "Ola Normann", age: 51}
-
-
-function agePersonInpure(person) {
-    person.age = person.age + 1;
-}
-
-let inpurePerson = new Person("Ola Normann", 50);
-agePersonInpure(inpurePerson);
-agePersonInpure(inpurePerson);
-
-// inpurePerson: Person {name: "Ola Normann", age: 52}
 ```
 I et leketøyeksempel som dette kan det virke uviktig,
 men i en større kodebase blir du da nødt til å holde orden på når og hvor et objekt
