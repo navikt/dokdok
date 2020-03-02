@@ -20,3 +20,54 @@ Applikasjonene under kan hende kjører som latin1 (ISO-8859-1) og det kan sette 
 * ondemandbrev
 * dialoguedlf
 * brevserver
+
+
+## Kodeprinsipper
+
+For å sørge for at kode vi skriver er vedlikeholbart i lang tid fremover så er det hensiktsmessig å ha noen
+prinsipper om hvordan vi skriver kode slik at det er enkelt å forstå og teste.
+På toppniva kan dette summeres med KISS(https://en.wikipedia.org/wiki/KISS_principle) og
+POLA(https://en.wikipedia.org/wiki/Principle_of_least_astonishment)
+
+### Immutability og pure functions
+
+Det er ofte hensiktsmessig å skrive kode hvor tilstand ikke endres og funksjoner heller returerer nye
+immutable objekter. Det man får ut av dette er kode som er idempotent og som ikke skaper eller påvirkes av 
+sideeffekter. Gevinsten med dette er at man kan lese og skjønne kode uten å måtte ta hensyn til konteksten
+rundt, fn(x) vil alltid returnere det samme uavhengig av konteksten rundt. Dette gjør det også mye enklere å
+teste kode da vi ikke lenger er nødt til å mocke resten av universet.
+
+> You wanted a banana but what you got was a gorilla holding the banana and the entire jungle.
+> -Joe Armstrong
+
+```java
+class Example {
+    Pokemon levelUpPure(Pokemon pokemon) {
+        return new Pokemon(pokemon.type, pokemon.level + 1);
+    }
+
+    void pureExample() {
+        Pokemon purePokemon = new Pokemon("Pikachu", 10);
+        Pokemon slightlyStrongerPurePokemon = levelUpPure(purePokemon);
+        Pokemon anotherSlightlyStrongerPurePokemon = levelUpPure(purePokemon);
+        // purePokemon: Pokemon {type: "Pikachu", level: 10}
+        // slightlyStrongerPurePokemon: Pokemon {type: "Pikachu", level: 11}
+        // anotherSlightlyStrongerPurePokemon: Pokemon {type: "Pikachu", level: 11}
+    }
+
+    void levelUpImpure(Pokemon pokemon) {
+        pokemon.level = pokemon.level + 1;
+    }
+    
+    void impureExample() {
+        Pokemon impurePokemon = new Pokemon("Grimer", 10);
+        levelUpImpure(impurePokemon);
+        levelUpImpure(impurePokemon);
+        // inpurePokemon: Pokemon {type: "Grimer", level: 12}
+    }
+}
+```
+I et leketøyeksempel som dette kan det virke uviktig,
+men i en større kodebase blir du da nødt til å holde orden på når og hvor et objekt
+blir mutert, samt hva du eventuelt påvirker når du muterer et objekt. Dette gjør det vanskligere 
+å forstå kode, samtidig som det øker sjansen for å introdusere bugs og regresjoner.
