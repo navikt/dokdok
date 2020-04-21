@@ -71,3 +71,13 @@ I et leketøyeksempel som dette kan det virke uviktig,
 men i en større kodebase blir du da nødt til å holde orden på når og hvor et objekt
 blir mutert, samt hva du eventuelt påvirker når du muterer et objekt. Dette gjør det vanskligere 
 å forstå kode, samtidig som det øker sjansen for å introdusere bugs og regresjoner.
+
+### Annotasjoner
+
+Annotasjoner er ment for å gjøre hverdagen til oss utviklere enklere. En stor del av nytteverdien i bruk av annotasjoner er å abstrahere bort boilerplate code slik at man som utviklere kan fokusere på det som utføres i koden. 
+
+For eksempel vill lombok annotasjoner som *@Data* og *@Value* håndtere getters, setters, konstruktør etc, slik at man får lettleste klassser. Fokuset for neste utviklere som leser koden blir da på hvilke felter som finnes i klassen og på hvilke metoder i klassen som faktisk utfører domenerelavante processer.
+
+Teamet vil at vi som utviklere skal hjelpe hverandre å skjønne intensjonen bak all kode vi skriver. Et tiltak vi har valgt for å støtte dette er å skrive ut felters spesifikasjoner eksplisitt. Med det mener vi for eksempel at vi skriver ut *"private final String navn"* til tross for at annotasjonen @Value generer spesifikasjonene for oss. 
+
+Målet med koden er alltid at andre utviklere, og du selv om et halvår, skal kunne lese koden. 
