@@ -21,6 +21,25 @@ Applikasjonene under kan hende kjører som latin1 (ISO-8859-1) og det kan sette 
 * dialoguedlf
 * brevserver
 
+## Utviklingsprinsipper
+
+* Endringer og feilrettinger brytes ned i oppgaver.
+* Oppgaver representeres og dokumenteres ved saker i JIRA eller GitHub.
+* Saker som utvikles skal estimeres av en utvikler med kjennskap til saken.
+
+### Estimater
+
+Formålet med estimater er å iverksette tiltak hvis man overskrider estimat. Estimatet sier noe om omfanget til oppgaven.
+Hvis en oppgave estimeres til over maksimalt estimat, burde oppgaven brytes i flere deler.
+
+Følgende estimater benyttes:
+
+* XS - 4 timer (en halv arbeidsdag)
+* S - 8 timer  (en arbeidsdag)
+* M - 16 timer (to arbeidsdager)
+* L -  40 timer (en arbeidsuke)
+* XL - 60 timer (en og en halv arbeidsuke)
+
 
 ## Kodeprinsipper
 
