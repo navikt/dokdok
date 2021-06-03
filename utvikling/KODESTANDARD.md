@@ -100,3 +100,24 @@ For eksempel vill lombok annotasjoner som *@Data* og *@Value* håndtere getters,
 Teamet vil at vi som utviklere skal hjelpe hverandre å skjønne intensjonen bak all kode vi skriver. Et tiltak vi har valgt for å støtte dette er å skrive ut felters spesifikasjoner eksplisitt. Med det mener vi for eksempel at vi skriver ut *"private final String navn"* til tross for at annotasjonen @Value generer spesifikasjonene for oss. 
 
 Målet med koden er alltid at andre utviklere, og du selv om et halvår, skal kunne lese koden. 
+
+## Testerprinsipper
+
+Vi ønsker generelt en total testdekning på kode vi deployer til produksjon,
+det vil si ett sett med unit tester for hver klasse (med unntak av rene dataklasser) og ett sett med integrasjonstester
+for hver funksjonelle enhet (ex. tjoark203).
+Generelt ønsker vi å plassere tester så lavt i testpyramiden som det praktisk lar seg gjøre.
+Det vil si at det er ønskelig at vi primært bruker unit tester og kun bruke integrasjonstester der hvor det ikke praktisk er mulig å teste med unit tester.
+
+## Navngivnig av tester
+Navngivning av tester bør følge **ShouldWhen** konvensjonen slik at andre utviklere, og du selv om et halvår har nødvendig kontekst når det jobbes med koden.
+
+```java
+class TestNames{
+    public void shouldFooWhenBar(){
+    }
+
+    public void shouldNotValidateAdresseWhenWhenAdresselinjeIsNull(){
+    }
+}
+```
