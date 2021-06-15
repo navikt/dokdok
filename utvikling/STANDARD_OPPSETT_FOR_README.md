@@ -42,5 +42,5 @@ Link til Kibana og hvordan man kobler seg til poden på kubectl og evt andre ove
 
 Hendvendelser skal alltid være med denne teksten:
 
-Spørsmål koden eller prosjektet kan rettes til Team Dokumentløsninger på:
+Spørsmål til koden eller prosjektet kan rettes til Team Dokumentløsninger på:
 * [\#Team Dokumentløsninger](https://nav-it.slack.com/client/T5LNAMWNA/C6W9E5GPJ)
