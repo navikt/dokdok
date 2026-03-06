@@ -1,0 +1,282 @@
+---
+name: spring-boot-4-migration
+description: Guide for migrating NAV/NAIS Spring Boot 3 applications to Spring Boot 4 (Spring Framework 7). Use this when upgrading a Spring Boot application to version 4, or when asked about Spring Boot 4 migration, breaking changes, renamed starters, Jackson 3, or Spring @Retryable.
+---
+
+# Spring Boot 4 Migration Guide (NAV / NAIS)
+
+Practical guide for upgrading NAV Spring Boot apps to Spring Boot 4 (Spring Framework 7, Java 25).
+
+The main migration guide can be found here: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
+
+---
+
+## 1. Parent POM & Java Version
+
+Should verify that this is the latest version
+
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.3</version>
+</parent>
+
+<properties>
+    <java.version>25</java.version> <!-- or 21+ -->
+</properties>
+```
+
+---
+
+## 2. Renamed Starters
+
+Spring Boot 4 renamed several starter artifacts:
+
+| Old (Boot 3)                             | New (Boot 4)                              |
+|------------------------------------------|-------------------------------------------|
+| `spring-boot-starter-aop`               | `spring-boot-starter-aspectj`             |
+| `spring-boot-starter-web`               | `spring-boot-starter-webmvc`              |
+| `spring-boot-webtestclient` + `spring-boot-starter-webclient-test` | `spring-boot-starter-webmvc-test` |
+
+**Critical**: If you use AOP annotations (resilience4j `@CircuitBreaker`, Spring `@Retryable`, `@Cacheable`, etc.), you **must** have `spring-boot-starter-aspectj` in your dependencies. Without it, AOP proxies are not created and annotations silently do nothing.
+
+Also verify `spring.aop.auto` is **not** set to `false` in `application.properties` — this disables all AOP auto-configuration.
+
+---
+
+## 3. Resilience: @Retry → @Retryable
+
+Spring Framework 7 has native `@Retryable` (package `org.springframework.resilience.annotation`). This replaces resilience4j `@Retry`.
+
+**Note**: There is no native Spring circuit breaker yet. Keep resilience4j `@CircuitBreaker` for that.
+
+### Setup
+
+```java
+// On your Application class
+@EnableResilientMethods
+@SpringBootApplication
+public class Application { ... }
+```
+
+```xml
+<!-- Required for AOP proxies -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-aspectj</artifactId>
+</dependency>
+```
+
+### Migration
+
+```java
+// Before (resilience4j)
+@Retry(name = "my-service")
+
+// After (Spring native)
+@Retryable(includes = MyTechnicalException.class)
+```
+
+Remove resilience4j retry configuration from `application.properties`:
+```properties
+# Delete these
+resilience4j.retry.instances.my-service.max-attempts=3
+resilience4j.retry.instances.my-service.wait-duration=500ms
+resilience4j.retry.instances.my-service.retry-exceptions=...
+```
+
+### Aspect ordering
+
+When combining resilience4j `@CircuitBreaker` with Spring `@Retryable`:
+- Circuit breaker is the **outer** aspect (wraps retry)
+- Each method invocation = 1 circuit breaker call, regardless of retries
+- This matches the default behavior when both were resilience4j annotations
+
+### Dependencies
+
+```xml
+<!-- Remove if no longer using @Retry -->
+<dependency>resilience4j-reactor</dependency>
+
+<!-- Keep for @CircuitBreaker -->
+<dependency>
+    <groupId>io.github.resilience4j</groupId>
+    <artifactId>resilience4j-spring-boot3</artifactId>
+</dependency>
+```
+
+---
+
+## 4. Jackson 2.x → 3.x
+
+Spring Boot 4 uses Jackson 3.x (`tools.jackson` package) by default. They are working towards removing Jackson 2 entirely. See: https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring
+
+Key changes:
+- **Package rename**: `com.fasterxml.jackson` → `tools.jackson`
+- **No `ObjectMapper` auto-config**: Spring auto-configures a `JsonMapper` bean instead. Replace `ObjectMapper` usage with `JsonMapper`.
+- **Java 8 time types** (e.g., `Instant`, `LocalDate`) are supported by default (no need for `jackson-datatype-jsr310`)
+
+### Known Jackson 3 pitfalls
+
+**1. Final lists with inline initialization are always empty after deserialization**
+
+In Jackson 2, deserializing into a class like this worked fine:
+```java
+class MyObject {
+    final List<Item> items = new ArrayList<>();
+}
+```
+In Jackson 3 this always results in an empty list. Fix: make the field non-final, or add a setter.
+
+**2. Lombok `@AllArgsConstructor` + `@Builder.Default` can cause unexpected behavior**
+
+The combination of Lombok's `@AllArgsConstructor` with fields annotated `@Builder.Default` may produce incorrect deserialization results. Make sure you have tests that send actual JSON payloads to catch these issues. See: https://github.com/navikt/foerstesidegenerator/pull/139
+
+**3. `fail-on-null-for-primitives` default flipped to `true`**
+
+Jackson 3 changed the default for `fail-on-null-for-primitives` from `false` to `true`. If your JSON contains `null` values for primitive fields (int, boolean, etc.), deserialization will now fail. To restore the old behavior:
+```properties
+spring.jackson.deserialization.fail-on-null-for-primitives=false
+```
+
+---
+
+## 5. Renamed Properties
+
+Spring Boot 4 renamed many configuration properties. The full changelog is at:
+https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Configuration-Changelog
+
+Key renames relevant to typical NAV apps:
+
+| Old (Boot 3)                                   | New (Boot 4)                                    |
+|------------------------------------------------|-------------------------------------------------|
+| `server.error.include-message`                 | `spring.web.error.include-message`              |
+| `server.error.include-stacktrace`              | `spring.web.error.include-stacktrace`           |
+| `server.error.include-binding-errors`          | `spring.web.error.include-binding-errors`       |
+| `server.error.include-exception`               | `spring.web.error.include-exception`            |
+| `server.error.include-path`                    | `spring.web.error.include-path`                 |
+| `server.error.path`                            | `spring.web.error.path`                         |
+| `server.error.whitelabel.enabled`              | `spring.web.error.whitelabel.enabled`           |
+| `server.servlet.encoding.*`                    | `spring.servlet.encoding.*`                     |
+| `spring.codec.max-in-memory-size`              | `spring.http.codecs.max-in-memory-size`         |
+| `spring.codec.log-request-details`             | `spring.http.codecs.log-request-details`        |
+| `spring.dao.exceptiontranslation.enabled`      | `spring.persistence.exceptiontranslation.enabled` |
+| `spring.data.mongodb.*`                        | `spring.mongodb.*`                              |
+| `spring.graphql.path`                          | `spring.graphql.http.path`                      |
+| `spring.jackson.read`                          | `spring.jackson.json.read`                      |
+| `spring.jackson.write`                         | `spring.jackson.json.write`                     |
+| `spring.session.redis.*`                       | `spring.session.data.redis.*`                   |
+| `spring.test.webclient.mockrestserviceserver.enabled` | `spring.test.restclient.mockrestserviceserver.enabled` |
+| `management.health.mongo.enabled`              | `management.health.mongodb.enabled`             |
+| `management.otlp.tracing.*`                    | `management.opentelemetry.tracing.export.otlp.*` |
+| `management.otlp.logging.*`                    | `management.opentelemetry.logging.export.otlp.*` |
+| `management.zipkin.tracing.*`                  | `management.tracing.export.zipkin.*`            |
+
+Spring Boot ships with a properties migrator module that logs warnings for deprecated properties at startup. Add it temporarily during migration:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-properties-migrator</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+Remove it once all properties are updated.
+
+---
+
+## 6. Other Breaking Changes / Gotchas
+
+### Modularized packages — clean up dependencies
+
+Spring Boot 4 split packages and extracted test code into separate modules. You will likely need to clean up dependencies. See: https://spring.io/blog/2025/10/28/modularizing-spring-boot
+
+### Auto-configuration class packages moved
+
+The package structure for auto-configuration classes changed from `org.springframework.boot.autoconfigure.<domain>...` to `org.springframework.boot.<domain>.autoconfigure...`. For example:
+
+```java
+// Before
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration;
+
+// After
+import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcObservationAutoConfiguration;
+```
+
+### `spring.aop.auto=false`
+
+If your `application.properties` contains `spring.aop.auto=false`, **remove it**. This disables all AOP auto-configuration, which means `@CircuitBreaker`, `@Retryable`, `@Cacheable`, `@Transactional`, etc. silently stop working.
+
+### Replace `spring-cloud-contract` starters with WireMock
+
+You don't need `spring-cloud-contract` starters — `wiremock-spring-boot` does the job (we typically don't use any other spring-cloud-contract functionality). Use:
+
+```xml
+<dependency>
+    <groupId>org.wiremock.integrations</groupId>
+    <artifactId>wiremock-spring-boot</artifactId>
+    <version>4.0.9</version>
+    <scope>test</scope>
+</dependency>
+```
+
+Docs: https://wiremock.org/docs/spring-boot/
+
+### `SecurityAutoConfiguration` exclusion may be unnecessary
+
+After Spring Boot modularization, `SecurityAutoConfiguration` is no longer included in the web package. It comes in via `spring-boot-starter-security-oauth2-client`, but if you use `spring-security-oauth2-client` directly instead, it won't be on the classpath. In that case, any `exclude = SecurityAutoConfiguration.class` can simply be removed.
+
+### RestTestClient binding modes
+
+If your tests need token-support `@Protected` annotations (or other interceptors) to be evaluated, you must bind `RestTestClient` with `.bindToServer()`. Otherwise, you can use `.bindToController(...)` which runs with significantly fewer resources.
+
+Test dependency:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-resttestclient</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+### Conflict between `microsoft-graph` and `token-validation-spring-test`
+
+Apps using `microsoft-graph` (which pulls in okhttp3 v4) together with `token-validation-spring-test` (which transitively brings `mock-oauth2-server` with okhttp3 v5) will get a runtime conflict.
+
+See: https://github.com/microsoftgraph/msgraph-sdk-java-core/issues/1940
+
+Workaround — pin `mock-oauth2-server` to 2.3.0:
+```xml
+<dependency>
+    <groupId>no.nav.security</groupId>
+    <artifactId>mock-oauth2-server</artifactId>
+    <version>2.3.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+### Apache Camel is not yet compatible
+
+As of Camel 4.17.0, Camel is not compatible with Spring Boot 4.
+
+See: https://issues.apache.org/jira/browse/CAMEL-22463
+
+---
+
+## 7. Migration Checklist
+
+- [ ] Update parent POM to Spring Boot 4.x
+- [ ] Update Java version (21+)
+- [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, test clients)
+- [ ] Replace resilience4j `@Retry` with Spring `@Retryable`
+- [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet)
+- [ ] Add `@EnableResilientMethods` to Application class
+- [ ] Verify `spring.aop.auto` is NOT set to false
+- [ ] Update Jackson imports (`com.fasterxml.jackson` → `tools.jackson`)
+- [ ] Rename moved properties (`server.error.*` → `spring.web.error.*`, etc.) — use `spring-boot-properties-migrator` to find them
+- [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
+- [ ] Run full test suite and verify
