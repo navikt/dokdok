@@ -15,7 +15,17 @@ Det finnes to steder skills kan plasseres:
 
 ### Oppsett for personlig bruk
 
-1. Kopier ønsket skill-mappe til din lokale `~/.copilot/skills/`-mappe:
+1. Du kan bruke symlinks for å automatisk oppdatere skills fra dokdok-repoet i
+   din lokale mappe når du puller endringer fra repoet (dette funker i hvert fall på linux og macOS):
+
+       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills ~/.copilot/skills
+
+   Eventuelt kan du linke inn enkelt skill om du også har skills fra andre steder:
+
+       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills/spring-boot-4-migration ~/.copilot/skills/spring-boot-4-migration
+
+
+1. Det er også mulig å bare kopiere ønsket skill-mappe til din lokale `~/.copilot/skills/`-mappe:
 
    ```
    ~/.copilot/
