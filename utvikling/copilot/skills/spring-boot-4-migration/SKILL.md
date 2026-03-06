@@ -38,6 +38,7 @@ Spring Boot 4 renamed several starter artifacts:
 | `spring-boot-starter-aop`               | `spring-boot-starter-aspectj`             |
 | `spring-boot-starter-web`               | `spring-boot-starter-webmvc`              |
 | `spring-boot-webtestclient` + `spring-boot-starter-webclient-test` | `spring-boot-starter-webmvc-test` |
+| `spring-kafka` / `spring-kafka-test`    | `spring-boot-starter-kafka` / `spring-boot-starter-kafka-test` |
 
 **Critical**: If you use AOP annotations (resilience4j `@CircuitBreaker`, Spring `@Retryable`, `@Cacheable`, etc.), you **must** have `spring-boot-starter-aspectj` in your dependencies. Without it, AOP proxies are not created and annotations silently do nothing.
 
@@ -193,6 +194,38 @@ Remove it once all properties are updated.
 
 Spring Boot 4 split packages and extracted test code into separate modules. You will likely need to clean up dependencies. See: https://spring.io/blog/2025/10/28/modularizing-spring-boot
 
+### Kafka: use `spring-boot-starter-kafka` instead of `spring-kafka`
+
+Due to modularization, the Kafka auto-configuration (`KafkaAutoConfiguration`, `KafkaTemplate` bean, `ProducerFactory`, `ConsumerFactory`, etc.) has moved out of the monolithic `spring-boot-autoconfigure` into a dedicated `spring-boot-kafka` module. If your app depends on bare `spring-kafka`, the auto-configured beans will **not** be created and you'll get `NoSuchBeanDefinitionException` for `KafkaTemplate` at startup.
+
+**Fix**: Replace direct `spring-kafka` / `spring-kafka-test` dependencies with the new Boot 4 starters:
+
+```xml
+<!-- Before (Boot 3) -->
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.kafka</groupId>
+    <artifactId>spring-kafka-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- After (Boot 4) -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-kafka</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-kafka-test</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+The new starters transitively pull in `spring-kafka`, `spring-boot-kafka` (which contains the auto-configuration), and `spring-boot-transaction`.
+
 ### Auto-configuration class packages moved
 
 The package structure for auto-configuration classes changed from `org.springframework.boot.autoconfigure.<domain>...` to `org.springframework.boot.<domain>.autoconfigure...`. For example:
@@ -271,7 +304,7 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 
 - [ ] Update parent POM to Spring Boot 4.x
 - [ ] Update Java version (21+)
-- [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, test clients)
+- [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, `spring-kafka` → `spring-boot-starter-kafka`, test clients)
 - [ ] Replace resilience4j `@Retry` with Spring `@Retryable`
 - [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet)
 - [ ] Add `@EnableResilientMethods` to Application class
@@ -279,4 +312,4 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 - [ ] Update Jackson imports (`com.fasterxml.jackson` → `tools.jackson`)
 - [ ] Rename moved properties (`server.error.*` → `spring.web.error.*`, etc.) — use `spring-boot-properties-migrator` to find them
 - [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
-- [ ] Run full test suite and verify
+- [ ] Run `mvn clean verify` to ensure everything compiles and all tests (unit + integration) pass
