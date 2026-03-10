@@ -46,16 +46,16 @@ Also verify `spring.aop.auto` is **not** set to `false` in `application.properti
 
 ---
 
-## 3. Resilience: @Retry → @Retryable
+## 3. Resilience: spring-retry / resilience4j @Retry → Spring native @Retryable
 
-Spring Framework 7 has native `@Retryable` (package `org.springframework.resilience.annotation`). This replaces resilience4j `@Retry`.
+Spring Framework 7 has native `@Retryable` (`org.springframework.resilience.annotation`). This replaces **both** spring-retry's `@Retryable` and resilience4j's `@Retry`.
 
 **Note**: There is no native Spring circuit breaker yet. Keep resilience4j `@CircuitBreaker` for that.
 
 ### Setup
 
 ```java
-// On your Application class
+// Replace @EnableRetry (spring-retry) with:
 @EnableResilientMethods
 @SpringBootApplication
 public class Application { ... }
@@ -67,9 +67,82 @@ public class Application { ... }
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-aspectj</artifactId>
 </dependency>
+
+<!-- Remove spring-retry dependency -->
+<!-- <dependency>
+    <groupId>org.springframework.retry</groupId>
+    <artifactId>spring-retry</artifactId>
+</dependency> -->
 ```
 
-### Migration
+### Migrating from spring-retry
+
+The native `@Retryable` flattens `@Backoff` attributes directly onto the annotation. Key attribute mapping:
+
+| spring-retry | Spring native | Notes |
+|---|---|---|
+| `retryFor = X.class` | `includes = X.class` | |
+| `exclude = X.class` | `excludes = X.class` | |
+| `maxAttempts = N` | `maxRetries = N - 1` | spring-retry counts total attempts (initial + retries), native counts only retries |
+| `@Backoff(delay = 1000)` | `delay = 1000` | Default is 1000ms in both |
+| `@Backoff(multiplier = 2)` | `multiplier = 2` | Default: spring-retry=0 (no multiplier), native=1.0 (same effect) |
+| `@Backoff(maxDelay = 5000)` | `maxDelay = 5000` | |
+
+**⚠️ maxAttempts vs maxRetries**: spring-retry `maxAttempts = 3` (default) = 1 initial + 2 retries. Native `maxRetries` default = 3 retries = 4 total attempts. To preserve spring-retry's default behavior, explicitly set `maxRetries = 2`.
+
+Examples:
+
+```java
+// Before (spring-retry)
+@Retryable(retryFor = MyException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
+
+// After (Spring native) — maxAttempts 3 (default) → maxRetries 2
+@Retryable(includes = MyException.class, maxRetries = 2, delay = 1000, multiplier = 2)
+```
+
+```java
+// Before (spring-retry)
+@Retryable(retryFor = MyException.class, maxAttempts = 5, backoff = @Backoff(delay = 200))
+
+// After (Spring native) — maxAttempts 5 → maxRetries 4
+@Retryable(includes = MyException.class, maxRetries = 4, delay = 200)
+```
+
+```java
+// Before (spring-retry, no @Backoff = default 1000ms delay)
+@Retryable(retryFor = MyException.class)
+
+// After (Spring native) — delay defaults to 1000, same as spring-retry
+@Retryable(includes = MyException.class, maxRetries = 2)
+```
+
+### Migrating RetryListener
+
+spring-retry's `RetryListener` is replaced by Spring's `@EventListener` for `MethodRetryEvent`:
+
+```java
+// Before (spring-retry)
+@Component
+public class RetryLogger implements RetryListener {
+    @Override
+    public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
+        log.warn("Retry {} failed: {}", context.getRetryCount(), throwable.getMessage());
+    }
+}
+
+// After (Spring native)
+@Component
+public class RetryLogger {
+    @EventListener
+    public void onRetry(MethodRetryEvent event) {
+        log.warn("Retry for {} failed: {}", event.getMethod().getName(), event.getFailure().getMessage());
+    }
+}
+```
+
+`MethodRetryEvent` extends `ApplicationEvent` and provides `getMethod()`, `getFailure()`, and `isRetryAborted()`. Note: retry count is not directly available (unlike spring-retry's `RetryContext`).
+
+### Migrating from resilience4j @Retry
 
 ```java
 // Before (resilience4j)
@@ -97,8 +170,9 @@ When combining resilience4j `@CircuitBreaker` with Spring `@Retryable`:
 ### Dependencies
 
 ```xml
-<!-- Remove if no longer using @Retry -->
-<dependency>resilience4j-reactor</dependency>
+<!-- Remove both -->
+<!-- <dependency>org.springframework.retry:spring-retry</dependency> -->
+<!-- <dependency>io.github.resilience4j:resilience4j-reactor</dependency> -->
 
 <!-- Keep for @CircuitBreaker -->
 <dependency>
@@ -305,7 +379,9 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 - [ ] Update parent POM to Spring Boot 4.x
 - [ ] Update Java version (21+)
 - [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, `spring-kafka` → `spring-boot-starter-kafka`, test clients)
-- [ ] Replace resilience4j `@Retry` with Spring `@Retryable`
+- [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (note: `maxAttempts` → `maxRetries = N-1`)
+- [ ] Replace spring-retry `RetryListener` with `@EventListener(MethodRetryEvent.class)`
+- [ ] Remove `spring-retry` dependency
 - [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet)
 - [ ] Add `@EnableResilientMethods` to Application class
 - [ ] Verify `spring.aop.auto` is NOT set to false
