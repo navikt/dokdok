@@ -18,7 +18,7 @@ Det finnes to steder skills kan plasseres:
 1. Du kan bruke symlinks for å automatisk oppdatere skills fra dokdok-repoet i
    din lokale mappe når du puller endringer fra repoet (dette funker i hvert fall på linux og macOS):
 
-       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills ~/.copilot/skills
+       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills ~/.copilot/
 
    Eventuelt kan du linke inn enkelt skill om du også har skills fra andre steder:
 
