@@ -135,12 +135,15 @@ public class RetryLogger implements RetryListener {
 public class RetryLogger {
     @EventListener
     public void onRetry(MethodRetryEvent event) {
-        log.warn("Retry for {} failed: {}", event.getMethod().getName(), event.getFailure().getMessage());
+        Throwable cause = (event.getFailure() instanceof RetryException re) ? re.getCause() : event.getFailure();
+        log.warn("Retry for {} failed: {}", event.getMethod().getName(), cause.getMessage(), cause);
     }
 }
 ```
 
 `MethodRetryEvent` extends `ApplicationEvent` and provides `getMethod()`, `getFailure()`, and `isRetryAborted()`. Note: retry count is not directly available (unlike spring-retry's `RetryContext`).
+
+> **Important:** `MethodRetryEvent.getFailure()` wraps the original exception in a `org.springframework.core.retry.RetryException`. Use `getCause()` to access the original exception. The old spring-retry `RetryListener.onError()` provided the raw throwable directly, but the new event-based approach wraps it.
 
 ### Migrating from resilience4j @Retry
 
