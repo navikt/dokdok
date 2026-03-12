@@ -1,5 +1,18 @@
-# Copilot Skills
+# Copilot-ressurser
 
+## Copilot instructions
+
+Filen `copilot-instructions.md` inneholder noen generelle instruksjoner om kodestil, arkitekturvalg og teknologier i applikasjonene våre.
+
+Filen kan plasseres mange forskjellige steder for at copilot automatisk skal laste den. Om du ikke har en personlig instructions-fil kan du symlinke den inn i `.copilot`-mappen din:
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/instructions/copilot-instructions.md ~/.copilot/
+
+Alternativt, f.eks. om du allerede har en personlig instructions-fil, kan du redigere din `.zshrc` / `.bashrc` og legge til følgende:
+
+    export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="~/<path til dokdok-repoet>/utvikling/copilot/instructions/"
+
+## Copilot Skills
 Denne mappen inneholder [Copilot Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) som er dokumentert og vedlikeholdt av teamet.
 
 Skills lastes inn on-demand av Copilot når de er relevante for det du spør om.
@@ -12,8 +25,6 @@ Det finnes to steder skills kan plasseres:
 |------------|-------|-----|
 | **Personlig** (brukernivå) | Tilgjengelig i alle repoer på maskinen din | `~/.copilot/skills/<skill-navn>/SKILL.md` |
 | **Repo-nivå** | Tilgjengelig for alle som jobber i repoet | `<repo>/.github/skills/<skill-navn>/SKILL.md` |
-
-### Oppsett for personlig bruk
 
 1. Du kan bruke symlinks for å automatisk oppdatere skills fra dokdok-repoet i
    din lokale mappe når du puller endringer fra repoet (dette funker i hvert fall på linux og macOS):
