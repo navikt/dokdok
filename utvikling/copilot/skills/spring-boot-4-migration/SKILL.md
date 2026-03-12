@@ -131,6 +131,9 @@ public class RetryLogger implements RetryListener {
 }
 
 // After (Spring native)
+import org.springframework.core.retry.RetryException; // note: in spring-core
+import org.springframework.resilience.retry.MethodRetryEvent; // note: in spring-context
+
 @Component
 public class RetryLogger {
     @EventListener
