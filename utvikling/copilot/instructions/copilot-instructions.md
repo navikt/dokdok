@@ -105,6 +105,15 @@ Should be documented with SpringDoc OpenAPI annotations.
 
 Key config classes: `<app-name>Properties`, `AzureProperties`, `NaisProperties`, `WebProxyProperties`.
 
+## Git & Workflow
+
+- **All changes are local only.** Do not push to remote branches, create remote branches, or open pull requests.
+- Committing locally is allowed and encouraged.
+- The developer will review changes and handle pushing/PR creation manually.
+- Do not run `git push`, `gh pr create`, or any command that modifies the remote repository.
+- When mentioning annotations or anything starting with `@` in commit messages or documentation, wrap them in backticks (e.g. `@Retryable`, `@Builder`).
+- Keep commit messages short and concise — a single imperative summary line is preferred.
+
 ## Building & Testing
 
 Use `mvn clean verify` to run all tests.
