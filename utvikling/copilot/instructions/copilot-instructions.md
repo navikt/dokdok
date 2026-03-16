@@ -61,7 +61,7 @@ Each external system has a dedicated anti-corruption layer that translates exter
 - Map java-types to oracle db fields as follows:
 
   | JAVA TYPE | ORACLE DATABASE TYPE |
-  |--------------------------------------|
+  |-----------|--------------------------|
   | boolean, java.lang.Boolean | NUMBER(1) |
   | int, java.lang.Integer | NUMBER(10) |
   | long, java.lang.Long | NUMBER(19) |
