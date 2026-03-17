@@ -52,6 +52,8 @@ Each external system has a dedicated anti-corruption layer that translates exter
 - Prefer objects over primitives over Strings as parameters
 - use the modern java.time-package, avoid java.sql.Date, avoid java.util.Date
 - Use jspecify for declaration of nullness
+- Use `_` for unused variables (unnamed variables, Java 22+)
+- Use static imports when possible for test assertions and utilities (e.g. `assertThat`, `mockStatic`) — but not for factory methods like `List.of`, `Map.of`
 
 ### Database
 - primary keys should have a name that consists of the entire table name (except prefix), and ends in "id". E.g. for `t_dokument_info` primary key is named `dokument_info_id`
