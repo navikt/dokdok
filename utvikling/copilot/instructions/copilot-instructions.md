@@ -54,7 +54,8 @@ Each external system has a dedicated anti-corruption layer that translates exter
 - Use jspecify for declaration of nullness
 - Use `_` for unused variables (unnamed variables, Java 22+)
 - Use static imports when possible for test assertions and utilities (e.g. `assertThat`, `mockStatic`) — but not for factory methods like `List.of`, `Map.of`
-- Comments and error messages should preferably be in Norwegian
+- Comments and error messages should preferably be in Norwegian, but keep technical terms in English (e.g. "null", "exception", "timeout")
+- Prefer `"..%s..".formatted()` over `String.format()` and string concatenation
 
 ### Database
 - primary keys should have a name that consists of the entire table name (except prefix), and ends in "id". E.g. for `t_dokument_info` primary key is named `dokument_info_id`
