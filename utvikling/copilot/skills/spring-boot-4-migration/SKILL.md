@@ -472,7 +472,7 @@ Workaround — pin `mock-oauth2-server` to 2.3.0:
 
 ### Apache Camel is not yet compatible
 
-As of Camel 4.17.0, Camel is not compatible with Spring Boot 4.
+As of Camel 4.17.0, Camel is not compatible with Spring Boot 4. Spring Boot 4 support in camel is expected in camel 4.19.0.
 
 See: https://issues.apache.org/jira/browse/CAMEL-22463
 
