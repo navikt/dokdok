@@ -194,9 +194,11 @@ When combining resilience4j `@CircuitBreaker` with Spring `@Retryable`:
 Spring Boot 4 uses Jackson 3.x (`tools.jackson` package) by default. They are working towards removing Jackson 2 entirely. See: https://spring.io/blog/2025/10/07/introducing-jackson-3-support-in-spring
 
 Key changes:
-- **Package rename**: `com.fasterxml.jackson` → `tools.jackson`
+- **Package rename for core/databind only**: `com.fasterxml.jackson.core` → `tools.jackson.core`, `com.fasterxml.jackson.databind` → `tools.jackson.databind`
+- **Annotations stay in Jackson 2 packages**: `com.fasterxml.jackson.annotation.*` (e.g., `@JsonIgnoreProperties`, `@JsonProperty`) are **NOT** renamed. Jackson 3 reads Jackson 2 annotations natively. Do **not** change annotation imports.
 - **No `ObjectMapper` auto-config**: Spring auto-configures a `JsonMapper` bean instead. Replace `ObjectMapper` usage with `JsonMapper`.
 - **Java 8 time types** (e.g., `Instant`, `LocalDate`) are supported by default (no need for `jackson-datatype-jsr310`)
+- **API renames**: `JsonMappingException.Reference.getFieldName()` → `JacksonException.Reference.getPropertyName()`
 
 ### Known Jackson 3 pitfalls
 
@@ -274,6 +276,51 @@ Remove it once all properties are updated.
 
 Spring Boot 4 split packages and extracted test code into separate modules. You will likely need to clean up dependencies. See: https://spring.io/blog/2025/10/28/modularizing-spring-boot
 
+**Test modules you likely need to add** (these were previously included transitively via `spring-boot-starter-test` but are now separate):
+
+| If you use… | Add dependency |
+|---|---|
+| `@AutoConfigureTestDatabase` | `spring-boot-jdbc-test` |
+| `@DataJpaTest` | `spring-boot-data-jpa-test` |
+| `WebTestClient` injection in `@SpringBootTest` | `spring-boot-webtestclient` |
+| `RestTestClient` | `spring-boot-resttestclient` |
+
+```xml
+<!-- Example: test dependencies for a JPA + WebMvc app -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-jdbc-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-data-jpa-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-webtestclient</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+**Important**: If a module uses test-jars from another module (e.g., `<type>test-jar</type>`), the consuming module must also declare these test dependencies directly — they are not transitively inherited through the test-jar.
+
+### `@AutoConfigureWebTestClient` now required
+
+In Spring Boot 3, `WebTestClient` was auto-configured when using `@SpringBootTest(webEnvironment = RANDOM_PORT)` with webflux on the classpath. In Boot 4, you must explicitly add `@AutoConfigureWebTestClient`:
+
+```java
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@AutoConfigureWebTestClient  // Required in Boot 4
+public abstract class AbstractITest {
+    @Autowired
+    public WebTestClient webTestClient;
+}
+```
+
 ### Kafka: use `spring-boot-starter-kafka` instead of `spring-kafka`
 
 Due to modularization, the Kafka auto-configuration (`KafkaAutoConfiguration`, `KafkaTemplate` bean, `ProducerFactory`, `ConsumerFactory`, etc.) has moved out of the monolithic `spring-boot-autoconfigure` into a dedicated `spring-boot-kafka` module. If your app depends on bare `spring-kafka`, the auto-configured beans will **not** be created and you'll get `NoSuchBeanDefinitionException` for `KafkaTemplate` at startup.
@@ -320,6 +367,24 @@ import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcObservationAutoConfiguration;
 ```
 
+Common import changes (non-exhaustive):
+
+| Old (Boot 3) | New (Boot 4) |
+|---|---|
+| `o.s.b.autoconfigure.domain.EntityScan` | `o.s.b.persistence.autoconfigure.EntityScan` |
+| `o.s.b.autoconfigure.jdbc.DataSourceProperties` | `o.s.b.jdbc.autoconfigure.DataSourceProperties` |
+| `o.s.b.autoconfigure.jdbc.DataSourceAutoConfiguration` | `o.s.b.jdbc.autoconfigure.DataSourceAutoConfiguration` |
+| `o.s.b.autoconfigure.flyway.FlywayAutoConfiguration` | `o.s.b.flyway.autoconfigure.FlywayAutoConfiguration` |
+| `o.s.b.test.autoconfigure.jdbc.AutoConfigureTestDatabase` | `o.s.b.jdbc.test.autoconfigure.AutoConfigureTestDatabase` |
+| `o.s.b.test.autoconfigure.orm.jpa.DataJpaTest` | `o.s.b.data.jpa.test.autoconfigure.DataJpaTest` |
+
+**Tip**: When you get a `ClassNotFoundException` for a `o.s.b.autoconfigure.*` class, search the Boot 4 jars for it:
+```bash
+find ~/.m2/repository/org/springframework/boot -path "*/4.0.3/*.jar" | while read jar; do
+  jar tf "$jar" | grep "YourClass.class$" && echo "  ^ in: $jar"
+done
+```
+
 ### `spring.aop.auto=false`
 
 If your `application.properties` contains `spring.aop.auto=false`, **remove it**. This disables all AOP auto-configuration, which means `@CircuitBreaker`, `@Retryable`, `@Cacheable`, `@Transactional`, etc. silently stop working.
@@ -337,7 +402,48 @@ You don't need `spring-cloud-contract` starters — `wiremock-spring-boot` does 
 </dependency>
 ```
 
+Note: if your code used `wiremock.org.apache.commons.io.IOUtils` (from the shaded WireMock jar), replace it with standard Java:
+```java
+// Before
+import wiremock.org.apache.commons.io.IOUtils;
+String content = IOUtils.toString(inputStream, UTF_8);
+
+// After
+String content = new String(inputStream.readAllBytes(), UTF_8);
+```
+
 Docs: https://wiremock.org/docs/spring-boot/
+
+### Hibernate 7: remove explicit dialect in tests, fix Oracle-specific JPQL
+
+Hibernate 7 (shipped with Spring Boot 4) auto-detects the database dialect. **Remove explicit `hibernate.dialect` from test properties** when using H2:
+
+```properties
+# DELETE this line from application-itest.properties:
+# spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.OracleDialect
+```
+
+**Why**: Hibernate 7 generates CHECK constraints for `@Enumerated(STRING)` columns during DDL generation. If OracleDialect is forced on H2, these constraints use Oracle-specific syntax that H2 rejects, causing `DataIntegrityViolation` errors in tests.
+
+**Also fix Oracle-specific JPQL**: Replace `TO_DATE()` (Oracle function) with standard JDBC date literals:
+
+```java
+// Before (Oracle-specific)
+@Query("... WHERE dok.opprettetDato >= TO_DATE('2022-01-01', 'yyyy-mm-dd')")
+
+// After (standard JDBC date literal — works on all databases)
+@Query("... WHERE dok.opprettetDato >= {d '2022-01-01'}")
+```
+
+### Third-party library compatibility
+
+Some third-party libraries need specific versions for Boot 4:
+
+| Library | Boot 3 version | Boot 4 version | Notes |
+|---|---|---|---|
+| `mq-jms-spring-boot-starter` (IBM MQ) | 3.x | **4.0.2+** | Major version bump for Boot 4 |
+| `datasource-proxy-spring-boot-starter` | 1.12.x | **2.0.0+** | 1.x references old auto-config package paths |
+| `token-support` (NAV) | 5.x | Check latest | Verify compatibility |
 
 ### `SecurityAutoConfiguration` exclusion may be unnecessary
 
@@ -391,7 +497,14 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 - [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet)
 - [ ] Add `@EnableResilientMethods` to Application class
 - [ ] Verify `spring.aop.auto` is NOT set to false
-- [ ] Update Jackson imports (`com.fasterxml.jackson` → `tools.jackson`)
+- [ ] Update Jackson **databind/core** imports (`com.fasterxml.jackson.databind` → `tools.jackson.databind`, `com.fasterxml.jackson.core` → `tools.jackson.core`). **Do NOT change annotation imports** — `com.fasterxml.jackson.annotation.*` stays as-is.
+- [ ] Fix Jackson 3 API changes (e.g., `Reference.getFieldName()` → `Reference.getPropertyName()`)
 - [ ] Rename moved properties (`server.error.*` → `spring.web.error.*`, etc.) — use `spring-boot-properties-migrator` to find them
+- [ ] Update moved auto-configuration class imports (see import table in section 6)
+- [ ] Add modularized test dependencies (`spring-boot-jdbc-test`, `spring-boot-data-jpa-test`, `spring-boot-webtestclient` as needed)
+- [ ] Add `@AutoConfigureWebTestClient` to tests that inject `WebTestClient`
+- [ ] Remove explicit `hibernate.dialect` from test properties (Hibernate 7 auto-detects)
+- [ ] Replace Oracle-specific JPQL functions (e.g., `TO_DATE()` → JDBC date literals `{d '...'}`)
+- [ ] Update third-party libraries for Boot 4 compatibility (IBM MQ → 4.x, datasource-proxy → 2.x, etc.)
 - [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
 - [ ] Run `mvn clean verify` to ensure everything compiles and all tests (unit + integration) pass
