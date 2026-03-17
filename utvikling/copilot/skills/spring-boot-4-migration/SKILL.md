@@ -414,18 +414,9 @@ String content = new String(inputStream.readAllBytes(), UTF_8);
 
 Docs: https://wiremock.org/docs/spring-boot/
 
-### Hibernate 7: remove explicit dialect in tests, fix Oracle-specific JPQL
+### Hibernate 7: Fix Oracle-specific JPQL
 
-Hibernate 7 (shipped with Spring Boot 4) auto-detects the database dialect. **Remove explicit `hibernate.dialect` from test properties** when using H2:
-
-```properties
-# DELETE this line from application-itest.properties:
-# spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.OracleDialect
-```
-
-**Why**: Hibernate 7 generates CHECK constraints for `@Enumerated(STRING)` columns during DDL generation. If OracleDialect is forced on H2, these constraints use Oracle-specific syntax that H2 rejects, causing `DataIntegrityViolation` errors in tests.
-
-**Also fix Oracle-specific JPQL**: Replace `TO_DATE()` (Oracle function) with standard JDBC date literals:
+**Fix Oracle-specific JPQL**: Replace `TO_DATE()` (Oracle function) with standard JDBC date literals:
 
 ```java
 // Before (Oracle-specific)
@@ -503,7 +494,6 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 - [ ] Update moved auto-configuration class imports (see import table in section 6)
 - [ ] Add modularized test dependencies (`spring-boot-jdbc-test`, `spring-boot-data-jpa-test`, `spring-boot-webtestclient` as needed)
 - [ ] Add `@AutoConfigureWebTestClient` to tests that inject `WebTestClient`
-- [ ] Remove explicit `hibernate.dialect` from test properties (Hibernate 7 auto-detects)
 - [ ] Replace Oracle-specific JPQL functions (e.g., `TO_DATE()` → JDBC date literals `{d '...'}`)
 - [ ] Update third-party libraries for Boot 4 compatibility (IBM MQ → 4.x, datasource-proxy → 2.x, etc.)
 - [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
