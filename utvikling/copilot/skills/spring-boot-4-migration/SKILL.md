@@ -434,7 +434,7 @@ Some third-party libraries need specific versions for Boot 4:
 |---|---|---|---|
 | `mq-jms-spring-boot-starter` (IBM MQ) | 3.x | **4.0.2+** | Major version bump for Boot 4 |
 | `datasource-proxy-spring-boot-starter` | 1.12.x | **2.0.0+** | 1.x references old auto-config package paths |
-| `token-support` (NAV) | 5.x | Check latest | Verify compatibility |
+| `token-support` (NAV) | 5.x | **6.0.4+** | Major version bump for Boot 4 |
 
 ### `SecurityAutoConfiguration` exclusion may be unnecessary
 
