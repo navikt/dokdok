@@ -371,12 +371,12 @@ Common import changes (non-exhaustive):
 
 | Old (Boot 3) | New (Boot 4) |
 |---|---|
-| `o.s.b.autoconfigure.domain.EntityScan` | `o.s.b.persistence.autoconfigure.EntityScan` |
-| `o.s.b.autoconfigure.jdbc.DataSourceProperties` | `o.s.b.jdbc.autoconfigure.DataSourceProperties` |
-| `o.s.b.autoconfigure.jdbc.DataSourceAutoConfiguration` | `o.s.b.jdbc.autoconfigure.DataSourceAutoConfiguration` |
-| `o.s.b.autoconfigure.flyway.FlywayAutoConfiguration` | `o.s.b.flyway.autoconfigure.FlywayAutoConfiguration` |
-| `o.s.b.test.autoconfigure.jdbc.AutoConfigureTestDatabase` | `o.s.b.jdbc.test.autoconfigure.AutoConfigureTestDatabase` |
-| `o.s.b.test.autoconfigure.orm.jpa.DataJpaTest` | `o.s.b.data.jpa.test.autoconfigure.DataJpaTest` |
+| `org.springframework.boot.autoconfigure.domain.EntityScan` | `org.springframework.boot.persistence.autoconfigure.EntityScan` |
+| `org.springframework.boot.autoconfigure.jdbc.DataSourceProperties` | `org.springframework.boot.jdbc.autoconfigure.DataSourceProperties` |
+| `org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration` | `org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration` |
+| `org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration` | `org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration` |
+| `org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase` | `org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase` |
+| `org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest` | `org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest` |
 
 **Tip**: When you get a `ClassNotFoundException` for a `o.s.b.autoconfigure.*` class, search the Boot 4 jars for it:
 ```bash
