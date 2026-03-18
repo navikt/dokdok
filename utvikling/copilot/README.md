@@ -58,4 +58,6 @@ Det finnes to steder skills kan plasseres:
 
 | Skill | Beskrivelse |
 |-------|-------------|
+| [migrate-to-restclient](skills/migrate-to-restclient/SKILL.md) | Guide for migrering fra WebClient/RestTemplate til RestClient med NAIS Texas-tokenveksling |
+| [owasp-top-10-2025](skills/owasp-top-10-2025/SKILL.md) | Sikkerhetsregler basert på OWASP Top 10:2025 — tilgangskontroll, injeksjon, kryptografi, logging m.m. |
 | [spring-boot-4-migration](skills/spring-boot-4-migration/SKILL.md) | Guide for migrering av NAV/NAIS Spring Boot 3-applikasjoner til Spring Boot 4 |
