@@ -14,7 +14,6 @@ Consumer (e.g., PdlConsumer)
             → detects TARGET_SCOPE or MASKINPORTEN_SCOPE attribute
             → calls NaisTexasConsumer to fetch token from Texas sidecar
             → sets Authorization: Bearer <token>
-            → adds Nav-CallId header for distributed tracing
         → request proceeds to target service
 ```
 
@@ -125,8 +124,6 @@ public class NaisTexasConsumer {
 The interceptor checks for request attributes to decide which token type to fetch. Consumers set the attribute, and the interceptor handles the rest.
 
 ```java
-import no.nav.myapp.config.nais.NaisProperties;
-import org.slf4j.MDC;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -134,7 +131,6 @@ import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 
 public class NaisTexasRequestInterceptor implements ClientHttpRequestInterceptor {
 
@@ -142,11 +138,9 @@ public class NaisTexasRequestInterceptor implements ClientHttpRequestInterceptor
     public static final String MASKINPORTEN_SCOPE = "maskinportenScope";
 
     private final NaisTexasConsumer naisTexasConsumer;
-    private final String callIdHeaderName;
 
-    public NaisTexasRequestInterceptor(NaisTexasConsumer naisTexasConsumer, String callIdHeaderName) {
+    public NaisTexasRequestInterceptor(NaisTexasConsumer naisTexasConsumer) {
         this.naisTexasConsumer = naisTexasConsumer;
-        this.callIdHeaderName = callIdHeaderName;
     }
 
     @Override
@@ -162,15 +156,7 @@ public class NaisTexasRequestInterceptor implements ClientHttpRequestInterceptor
             request.getHeaders().setBearerAuth(naisTexasConsumer.getMaskinportenToken(maskinportenScope));
         }
 
-        // Add Nav-CallId for distributed tracing
-        request.getHeaders().add(callIdHeaderName, getCallId());
-
         return execution.execute(request, body);
-    }
-
-    private static String getCallId() {
-        String callId = MDC.get("callId");
-        return callId != null && !callId.isBlank() ? callId : UUID.randomUUID().toString();
     }
 }
 ```
@@ -195,7 +181,7 @@ public class RestClientConfig {
     RestClient restClientTexas(RestClient.Builder restClientBuilder, NaisTexasConsumer naisTexasConsumer) {
         return restClientBuilder
                 .requestFactory(jdkClientHttpRequestFactory())
-                .requestInterceptor(new NaisTexasRequestInterceptor(naisTexasConsumer, "Nav-Callid"))
+                .requestInterceptor(new NaisTexasRequestInterceptor(naisTexasConsumer))
                 .build();
     }
 
@@ -271,7 +257,7 @@ public class AltinnConsumer {
 
 ### No-auth consumer
 
-Consumers without authentication still benefit from the shared RestClient (gets Nav-CallId header automatically):
+Consumers without authentication still benefit from the shared RestClient for consistent timeout configuration:
 
 ```java
 @Component
@@ -301,7 +287,7 @@ For consumers that need an unsupported scope, you must keep the manual Maskinpor
 - Retain the `MaskinportenConsumer` (or equivalent) that signs JWTs using `AppCertificate` and `nimbus-jose-jwt`
 - Retain `KeyStoreProperties` and the virksomhetssertifikat vault mount in `naiserator.yaml`
 - Inject `MaskinportenConsumer` into the affected consumer and set `Bearer` auth directly in the request headers
-- The consumer can still use the shared `restClientTexas` bean for Nav-CallId — just don't set the `MASKINPORTEN_SCOPE` attribute
+- The consumer can still use the shared `restClientTexas` bean — just don't set the `MASKINPORTEN_SCOPE` attribute
 
 Example:
 
@@ -338,7 +324,7 @@ public class ServiceRegistryConsumer {
 | Manual `MaskinportenConsumer` (JWT signing + certificate) | Texas `MASKINPORTEN_SCOPE` attribute **if scope is supported by NAIS** — otherwise keep old flow (see limitation above) |
 | `AzureProperties` / client-id / client-secret config | NAIS env vars (auto-injected by Entra ID integration) |
 | Virksomhetssertifikat / keystore files | Not needed for Texas scopes — **still needed** for unsupported scopes (e.g. `move/dpo.read`) |
-| `NavHeadersExchangeFilterFunction` (WebClient filter) | `NaisTexasRequestInterceptor` (adds Nav-CallId) |
+| `NavHeadersExchangeFilterFunction` (WebClient filter for Nav-CallId) | No longer needed — distributed tracing is handled by OpenTelemetry |
 
 ## NAIS configuration
 

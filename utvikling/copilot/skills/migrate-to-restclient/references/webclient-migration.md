@@ -66,7 +66,6 @@ public class MyConsumer {
 Key changes:
 - Inject `RestClient restClientTexas` instead of `WebClient`
 - `.bodyToMono(T.class).block()` → `.body(T.class)`
-- Manual `Nav-Call-Id` header → handled by interceptor automatically
 - OAuth2 filter function → `.attribute(TARGET_SCOPE, scope)` triggers Texas
 - No more `@Qualifier("azureOauth2WebClient")` — just inject the `restClientTexas` bean
 
@@ -133,7 +132,9 @@ public class NavHeadersExchangeFilterFunction implements ExchangeFilterFunction 
 
 ### After
 
-This is already handled by `NaisTexasRequestInterceptor` (see `texas-integration.md`), which adds both the Bearer token and Nav-CallId header. If you have additional custom headers, add them to the interceptor or use `defaultHeaders` on the RestClient builder.
+Custom Nav-CallId headers are no longer needed — distributed tracing is handled by OpenTelemetry on the NAIS platform. Simply remove the `ExchangeFilterFunction` without replacement.
+
+If you have custom headers **other than** call-id/correlation-id, convert them to `ClientHttpRequestInterceptor` or use `defaultHeaders` on the RestClient builder.
 
 ## WebClient with `.exchangeToMono()` patterns
 
@@ -182,3 +183,5 @@ return restClient.get()
 3. **Error types change** — `WebClientResponseException` → `HttpClientErrorException` / `HttpServerErrorException` (or use `defaultStatusHandler` to throw your own exceptions — see `error-handling.md`).
 
 4. **Reactive dependencies may become unused** — After migration, check if `spring-boot-starter-webclient`, `resilience4j-reactor`, and `reactor-core` are still needed. If this was the last reactive code, remove them.
+
+5. **Reactor context propagation code can be removed** — If the app had `ContextRegistry` / `Hooks.enableAutomaticContextPropagation()` setup (typically in an `ApplicationStartedEventListener` or similar) for propagating MDC context through reactive chains, this is no longer needed after migrating away from WebClient. Remove the listener, any `spring.factories` / `AutoConfiguration.imports` entry that registers it, and the `io.micrometer:context-propagation` dependency.

@@ -24,7 +24,7 @@ For each consumer:
   1. Does it need authentication?
      ├── Entra ID (machine-to-machine) → Texas with TARGET_SCOPE attribute
      ├── Maskinporten → Texas with MASKINPORTEN_SCOPE attribute
-     └── None → Plain RestClient (no attribute needed, still gets Nav-CallId)
+     └── None → Plain RestClient (no attribute needed)
 
   2. How should errors be handled?
      ├── Always throw on error → Use defaultStatusHandler on builder (cleanest)
@@ -80,10 +80,12 @@ Read `references/test-migration.md` for details.
 
 After all consumers are migrated:
 
-1. **Delete old infrastructure** — `WebClient` config classes, `ExchangeFilterFunction` implementations, OAuth2 client config. **Only** delete `MaskinportenConsumer` / certificate code if all Maskinporten scopes are supported by NAIS Texas — if any consumer still needs an unsupported scope (e.g. `move/dpo.read`), keep the manual JWT signing flow.
+1. **Delete old infrastructure** — `WebClient` config classes, `ExchangeFilterFunction` implementations, OAuth2 client config, reactor context propagation code (e.g. `ApplicationStartedEventListener` with `Hooks.enableAutomaticContextPropagation()`). **Only** delete `MaskinportenConsumer` / certificate code if all Maskinporten scopes are supported by NAIS Texas — if any consumer still needs an unsupported scope (e.g. `move/dpo.read`), keep the manual JWT signing flow.
 2. **Remove unused dependencies** from `pom.xml`:
    - `spring-boot-starter-webclient` (unless still needed for `WebTestClient` in tests)
+   - `spring-boot-starter-webflux` (if only used for `WebClient`)
    - `spring-security-oauth2-client` (if only used for WebClient OAuth2 flows)
+   - `io.micrometer:context-propagation` (if only used for reactor context propagation)
    - `nimbus-jose-jwt` (only if no consumer still needs manual JWT signing)
    - `httpclient5` (Apache HC5, if only used by old RestTemplate)
    - `resilience4j-reactor` (if migrated from reactive resilience operators to annotations)
