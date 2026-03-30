@@ -214,6 +214,8 @@ class MyObject {
 ```
 In Jackson 3 this always results in an empty list. Fix: make the field non-final, or add a setter.
 
+**Note:** Lombok `@Value` + `@Builder.Default` classes are **safe** from this pitfall. `@Value` generates an all-args constructor, and Jackson 3 uses constructor-based deserialization which bypasses field initialization entirely. The pitfall only applies to classes without a suitable constructor (where Jackson falls back to field-based deserialization).
+
 **2. Lombok `@AllArgsConstructor` + `@Builder.Default` can cause unexpected behavior**
 
 The combination of Lombok's `@AllArgsConstructor` with fields annotated `@Builder.Default` may produce incorrect deserialization results. Make sure you have tests that send actual JSON payloads to catch these issues. See: https://github.com/navikt/foerstesidegenerator/pull/139
