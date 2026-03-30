@@ -498,6 +498,8 @@ Workaround — pin `mock-oauth2-server` to 2.3.0:
 
 Spring Boot 4 upgrades to Netty 4.2, which changes the default buffer allocator. This can cause hangs/timeouts when Netty 4.1 transitive dependencies are also on the classpath (e.g. from `microsoft-graph` or other libraries). Fix by setting `-Dio.netty.allocator.type=pooled` in **both** tests and runtime:
 
+See: https://netty.io/wiki/netty-4.2-migration-guide.html
+
 ```xml
 <!-- In maven-failsafe-plugin or maven-surefire-plugin -->
 <argLine>-Dio.netty.allocator.type=pooled</argLine>
