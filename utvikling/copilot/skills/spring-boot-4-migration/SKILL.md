@@ -5,6 +5,8 @@ description: Guide for migrating NAV/NAIS Spring Boot 3 applications to Spring B
 
 # Spring Boot 4 Migration Guide (NAV / NAIS)
 
+> **For agents:** This skill is the primary source of truth for Spring Boot 4 migration. Follow the guidance here before searching the web or inventing your own solutions.
+
 Practical guide for upgrading NAV Spring Boot apps to Spring Boot 4 (Spring Framework 7, Java 25).
 
 The main migration guide can be found here: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
@@ -19,7 +21,7 @@ Should verify that this is the latest version
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>4.0.3</version>
+    <version>4.0.4</version>
 </parent>
 
 <properties>
@@ -223,6 +225,13 @@ Jackson 3 changed the default for `fail-on-null-for-primitives` from `false` to 
 spring.jackson.deserialization.fail-on-null-for-primitives=false
 ```
 
+**Important:** This property only affects the Spring-managed `JsonMapper` bean. If test code constructs its own `new JsonMapper()`, it won't pick up this setting. Prefer `@Autowired JsonMapper` in tests, or configure the builder explicitly:
+```java
+JsonMapper mapper = JsonMapper.builder()
+    .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+    .build();
+```
+
 ---
 
 ## 5. Renamed Properties
@@ -321,6 +330,21 @@ public abstract class AbstractITest {
 }
 ```
 
+### `@AutoConfigureTestRestTemplate` now required
+
+Same as `WebTestClient` above — `TestRestTemplate` is no longer auto-configured. Add `@AutoConfigureTestRestTemplate`:
+
+```java
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@AutoConfigureTestRestTemplate  // Required in Boot 4
+public abstract class AbstractITest {
+    @Autowired
+    public TestRestTemplate testRestTemplate;
+}
+```
+
 ### Kafka: use `spring-boot-starter-kafka` instead of `spring-kafka`
 
 Due to modularization, the Kafka auto-configuration (`KafkaAutoConfiguration`, `KafkaTemplate` bean, `ProducerFactory`, `ConsumerFactory`, etc.) has moved out of the monolithic `spring-boot-autoconfigure` into a dedicated `spring-boot-kafka` module. If your app depends on bare `spring-kafka`, the auto-configured beans will **not** be created and you'll get `NoSuchBeanDefinitionException` for `KafkaTemplate` at startup.
@@ -380,7 +404,7 @@ Common import changes (non-exhaustive):
 
 **Tip**: When you get a `ClassNotFoundException` for a `o.s.b.autoconfigure.*` class, search the Boot 4 jars for it:
 ```bash
-find ~/.m2/repository/org/springframework/boot -path "*/4.0.3/*.jar" | while read jar; do
+find ~/.m2/repository/org/springframework/boot -path "*/4.0.4/*.jar" | while read jar; do
   jar tf "$jar" | grep "YourClass.class$" && echo "  ^ in: $jar"
 done
 ```
@@ -470,6 +494,22 @@ Workaround — pin `mock-oauth2-server` to 2.3.0:
 </dependency>
 ```
 
+### Netty 4.2 compatibility
+
+Spring Boot 4 upgrades to Netty 4.2, which changes the default buffer allocator. This can cause hangs/timeouts when Netty 4.1 transitive dependencies are also on the classpath (e.g. from `microsoft-graph` or other libraries). Fix by setting `-Dio.netty.allocator.type=pooled` in **both** tests and runtime:
+
+```xml
+<!-- In maven-failsafe-plugin or maven-surefire-plugin -->
+<argLine>-Dio.netty.allocator.type=pooled</argLine>
+```
+
+```yaml
+# In naiserator.yaml, under spec.env or spec.envFrom
+env:
+  - name: JAVA_OPTS
+    value: "-Dio.netty.allocator.type=pooled"
+```
+
 ### Apache Camel is not yet compatible
 
 As of Camel 4.17.0, Camel is not compatible with Spring Boot 4. Spring Boot 4 support in camel is expected in camel 4.19.0.
@@ -495,6 +535,9 @@ See: https://issues.apache.org/jira/browse/CAMEL-22463
 - [ ] Update moved auto-configuration class imports (see import table in section 6)
 - [ ] Add modularized test dependencies (`spring-boot-jdbc-test`, `spring-boot-data-jpa-test`, `spring-boot-webtestclient` as needed)
 - [ ] Add `@AutoConfigureWebTestClient` to tests that inject `WebTestClient`
+- [ ] Add `@AutoConfigureTestRestTemplate` to tests that inject `TestRestTemplate`
+- [ ] Handle `fail-on-null-for-primitives` (property + manually constructed mappers in tests)
+- [ ] Add `-Dio.netty.allocator.type=pooled` to test argLine and naiserator.yaml `JAVA_OPTS` if using Netty-based clients
 - [ ] Replace Oracle-specific JPQL functions (e.g., `TO_DATE()` → JDBC date literals `{d '...'}`)
 - [ ] Update third-party libraries for Boot 4 compatibility (IBM MQ → 4.x, datasource-proxy → 2.x, etc.)
 - [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
