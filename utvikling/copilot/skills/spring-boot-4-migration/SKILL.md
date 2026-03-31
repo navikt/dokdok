@@ -423,7 +423,7 @@ You don't need `spring-cloud-contract` starters — `wiremock-spring-boot` does 
 <dependency>
     <groupId>org.wiremock.integrations</groupId>
     <artifactId>wiremock-spring-boot</artifactId>
-    <version>4.0.9</version>
+    <version>4.2.1</version>
     <scope>test</scope>
 </dependency>
 ```
