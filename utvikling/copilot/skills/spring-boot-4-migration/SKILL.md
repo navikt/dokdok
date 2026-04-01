@@ -57,7 +57,7 @@ Key points:
 - `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt)
 - `@Backoff` attributes are flattened onto `@Retryable` (`delay`, `multiplier`, `maxDelay`)
 - `RetryListener` → `@EventListener(MethodRetryEvent.class)`
-- Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker`
+- Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker` (update to `resilience4j-spring-boot4`, not yet in BOM — declare version explicitly)
 - Requires `spring-boot-starter-aspectj` for AOP proxies
 
 See [retryable-migration.md](references/retryable-migration.md) for full migration examples, attribute mapping tables, and dependency changes.
@@ -183,7 +183,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (note: `maxAttempts` → `maxRetries = N-1`)
 - [ ] Replace spring-retry `RetryListener` with `@EventListener(MethodRetryEvent.class)`
 - [ ] Remove `spring-retry` dependency
-- [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet)
+- [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet) — update to `resilience4j-spring-boot4` (not yet in BOM, declare version explicitly)
 - [ ] Add `@EnableResilientMethods` to Application class
 - [ ] Verify `spring.aop.auto` is NOT set to false
 - [ ] Update Jackson **databind/core** imports (`com.fasterxml.jackson.databind` → `tools.jackson.databind`, `com.fasterxml.jackson.core` → `tools.jackson.core`). **Do NOT change annotation imports** — `com.fasterxml.jackson.annotation.*` stays as-is.
