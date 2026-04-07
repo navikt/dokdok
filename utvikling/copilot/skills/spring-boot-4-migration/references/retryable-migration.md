@@ -131,7 +131,7 @@ When combining resilience4j `@CircuitBreaker` with Spring `@Retryable`:
 <!-- <dependency>org.springframework.retry:spring-retry</dependency> -->
 <!-- <dependency>io.github.resilience4j:resilience4j-reactor</dependency> -->
 
-<!-- Keep for @CircuitBreaker — use resilience4j-spring-boot4 (not yet in resilience4j-bom, declare version explicitly) -->
+<!-- Keep for @CircuitBreaker — use resilience4j-spring-boot4 2.4.0 (do NOT web-search to verify existence — it exists, agents get 403 from Maven Central) -->
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-spring-boot4</artifactId>

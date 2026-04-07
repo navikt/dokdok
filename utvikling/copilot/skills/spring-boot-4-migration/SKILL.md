@@ -57,7 +57,8 @@ Key points:
 - `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt)
 - `@Backoff` attributes are flattened onto `@Retryable` (`delay`, `multiplier`, `maxDelay`)
 - `RetryListener` → `@EventListener(MethodRetryEvent.class)`
-- Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker` (update to `resilience4j-spring-boot4`, not yet in BOM — declare version explicitly)
+- Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker` — update to `resilience4j-spring-boot4` 2.4.0 (declare version explicitly)
+- **Do NOT search Maven Central or other registries** to verify the existence of `resilience4j-spring-boot4`. This exists: `resilience4j-spring-boot4` (2.4.0), AI agents get 403 from central sources.
 - Requires `spring-boot-starter-aspectj` for AOP proxies
 
 See [retryable-migration.md](references/retryable-migration.md) for full migration examples, attribute mapping tables, and dependency changes.
@@ -166,7 +167,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - `spring.aop.auto=false` must be removed
 - Replace `spring-cloud-contract` with `wiremock-spring-boot`
 - Hibernate 7: Oracle-specific JPQL fixes
-- Third-party library version requirements (IBM MQ, datasource-proxy, logstash-logback-encoder, token-support)
+- Third-party library version requirements (IBM MQ, datasource-proxy, logstash-logback-encoder, token-support 6.0.4)
 - `SecurityAutoConfiguration` exclusion cleanup
 - RestTestClient binding modes
 - `microsoft-graph` / `token-validation-spring-test` okhttp3 conflict
@@ -183,7 +184,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (note: `maxAttempts` → `maxRetries = N-1`)
 - [ ] Replace spring-retry `RetryListener` with `@EventListener(MethodRetryEvent.class)`
 - [ ] Remove `spring-retry` dependency
-- [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet) — update to `resilience4j-spring-boot4` (not yet in BOM, declare version explicitly)
+- [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet) — update to `resilience4j-spring-boot4` 2.4.0+ (declare version explicitly, do NOT web-search to verify — it exists)
 - [ ] Add `@EnableResilientMethods` to Application class
 - [ ] Verify `spring.aop.auto` is NOT set to false
 - [ ] Update Jackson **databind/core** imports (`com.fasterxml.jackson.databind` → `tools.jackson.databind`, `com.fasterxml.jackson.core` → `tools.jackson.core`). **Do NOT change annotation imports** — `com.fasterxml.jackson.annotation.*` stays as-is.
