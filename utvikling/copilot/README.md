@@ -61,3 +61,19 @@ Det finnes to steder skills kan plasseres:
 | [migrate-to-restclient](skills/migrate-to-restclient/SKILL.md) | Guide for migrering fra WebClient/RestTemplate til RestClient med NAIS Texas-tokenveksling |
 | [owasp-top-10-2025](skills/owasp-top-10-2025/SKILL.md) | Sikkerhetsregler basert på OWASP Top 10:2025 — tilgangskontroll, injeksjon, kryptografi, logging m.m. |
 | [spring-boot-4-migration](skills/spring-boot-4-migration/SKILL.md) | Guide for migrering av NAV/NAIS Spring Boot 3-applikasjoner til Spring Boot 4 |
+
+## Copilot Agents
+
+Agenter er mer selvstendige enn skills — de utfører en hel arbeidsflyt fremfor å bare gi veiledning.
+
+Agenter plasseres i `~/.copilot/agents/<agent-navn>/AGENT.md` (brukernivå) eller `<repo>/.github/agents/<agent-navn>/AGENT.md` (repo-nivå).
+
+Du kan symlinke mappen slik at du alltid har siste versjon:
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/agents ~/.copilot/
+
+### Tilgjengelige agenter
+
+| Agent | Beskrivelse |
+|-------|-------------|
+| [local-code-review](agents/local-code-review/AGENT.md) | Gjennomgår lokale endringer mot head-branch — sjekker lesbarhet, ansvarsdeling, navngiving og OWASP Top 10-sikkerhet |
