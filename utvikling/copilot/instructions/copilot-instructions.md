@@ -6,24 +6,23 @@
 
 ## Tech Stack
 
-- **Java 25** - always use latest LTS java version
+- **Java 25** (latest LTS)
 - **Spring Boot 4.x.x** (parent POM)
-- **Maven** multi-module build
+- **Maven** (multi-module)
 - **Spring Resilience** for retries
 - **Lombok** (`@Value`, `@Builder`, `@Slf4j`)
-- **BlazeJpa** (new projects), **Hibernate** (if already present) for database-queries
-- **Redis/Valkey** for distributed caching, **Caffeine** for local caching
-- **JSpecify** for declaration of nullability
-- **Jakarta Validation** validation of configuration propeties etc
-- **JUnit 5**, **Mockito**, **Wiremock**, **TestRestClient** for testing
+- **BlazeJpa** (new), **Hibernate** (if present already)
+- **Redis/Valkey** (distributed cache), **Caffeine** (local cache)
+- **JSpecify**, **Jakarta Validation**
+- **JUnit 5**, **Mockito**, **Wiremock**, **TestRestClient**
 
 ## Module Structure
 
 | Module | Purpose |
 |---|---|
-| `app` | Spring Boot application entry point, GraphQL & REST controllers, wiring |
-| `core` | Shared domain models, anti-corruption layers, access control, config |
-| other | Make other modules as required - try to encapsulate features in a logical way |
+| `app` | Boot entrypoint, GraphQL/REST endpoints, wiring |
+| `core` | Shared domain, anti-corruption, access control, config |
+| other | Feature modules with clear boundaries |
 
 All feature modules depend on `core`. Only `app` depends on all modules.
 
@@ -31,12 +30,12 @@ All feature modules depend on `core`. Only `app` depends on all modules.
 
 The base package is `no.nav.<app-name>`. Key sub-packages:
 
-- `anticorruptionlayer/` — integration with external systems (Joark, PDL, SAK, FPSAK, K9SAK, Bisys, Pensjon, MS Graph, Entra Proxy, Tilgangsmaskinen, etc etc)
-- `domain/kode/` — enum code tables (Tema, Journalposttype, Journalstatus, etc.)
-- `query/` — GraphQL DataFetcher + Query + Service classes per query type
+- `anticorruptionlayer/` — external integrations/adapters
+- `domain/kode/` — enum code tables
+- `query/` — GraphQL DataFetcher + Query + Service
 - `endpoints/graphql/` — GraphQL controller and wiring
 - `endpoints/rest/` — REST controllers
-- `config` - classes holding configuration values and validation for those, but nothing else
+- `config` — config values + validation only
 
 ## Architecture Patterns
 
@@ -47,26 +46,26 @@ Each external system has a dedicated anti-corruption layer that translates exter
 ## Coding Conventions
 
 ### General
-- Use **Lombok** annotations: `@Builder` for construction, `@Slf4j` for logging
-- Use **parameterized logging**: `log.info("Fetching journalpost: {}", id)` — never string concatenation
-- Prefer **immutability** — use Java records, or lombok `@Value` (final fields, no setters)
+- Use **Lombok** (`@Builder`, `@Slf4j`)
+- Use parameterized logging, never string concat
+- Prefer immutability (record / `@Value`)
 - Use `Optional<T>` for nullable return values
-- Use Jakarta Bean Validation (`@NotBlank`, etc) on configuration classes. Make validation as strict as possible. Create tests that check that the constraints are actually validated.
+- Use strict Jakarta Bean Validation on config classes + tests
 - Avoid creating an interface if it will only be implemented by one class
-- Prefer objects over primitives over Strings as parameters
-- use the modern java.time-package, avoid java.sql.Date, avoid java.util.Date
-- Use jspecify for declaration of nullness
-- Use `_` for unused variables (unnamed variables, Java 22+)
-- Use static imports when possible for test assertions and utilities (e.g. `assertThat`, `mockStatic`) — but not for factory methods like `List.of`, `Map.of`
-- Comments and error messages should preferably be in Norwegian, but keep technical terms in English (e.g. "null", "exception", "timeout")
-- Prefer `"..%s..".formatted()` over `String.format()` and string concatenation
+- Prefer typed objects over primitives/strings in params
+- Use `java.time`; avoid `java.sql.Date` / `java.util.Date`
+- Use JSpecify nullness declarations
+- Use `_` for unused vars (Java 22+)
+- Static imports for test asserts/utilities (not `List.of`/`Map.of`)
+- Comments/error text preferably Norwegian; keep technical terms in English
+- Prefer `"...%s...".formatted()` over `String.format()`
 
 ### Database
-- primary keys should have a name that consists of the entire table name (except prefix), and ends in "id". E.g. for `t_dokument_info` primary key is named `dokument_info_id`
-- Norwegian letters should be substituted as follows in database object names: "æ" -> "e", "ø" -> "o", "å" -> "a"
-- Varchar2-fields should be one of these sizes: either 128 char (small, for enums, statuses, UUIDs etc), 512 char (medium, for document titles and short texts), 4000 char (large text fields). Specify sizes in char. Use CLOB for fields over 4000 characters.
-- For time / date-types, use DATE by default, or TIMESTAMP if the extra precision is required.
-- Map java-types to oracle db fields as follows:
+- PK names: full table name (without prefix) + `id` (`t_dokument_info` -> `dokument_info_id`)
+- Replace Norwegian letters in DB names: `æ->e`, `ø->o`, `å->a`
+- `VARCHAR2` sizes: `128`, `512`, `4000` char; use `CLOB` above `4000`
+- Use `DATE` by default, `TIMESTAMP` only when needed
+- Java-to-Oracle mapping:
 
   | JAVA TYPE | ORACLE DATABASE TYPE |
   |-----------|--------------------------|
@@ -102,7 +101,7 @@ Each external system has a dedicated anti-corruption layer that translates exter
 
 ## REST API
 
-Should be documented with SpringDoc OpenAPI annotations.
+Document with SpringDoc OpenAPI annotations.
 
 ## Configuration
 
@@ -119,8 +118,8 @@ Key config classes: `<app-name>Properties`, `AzureProperties`, `NaisProperties`,
 - Committing locally is allowed and encouraged.
 - The developer will review changes and handle pushing/PR creation manually.
 - Do not run `git push`, `gh pr create`, or any command that modifies the remote repository.
-- When mentioning annotations or anything starting with `@` in commit messages or documentation, wrap them in backticks (e.g. `@Retryable`, `@Builder`).
-- Keep commit messages short and concise — a single imperative summary line is preferred.
+- Wrap annotation names in backticks in commit messages/docs (e.g. `@Retryable`)
+- Keep commit messages short (single imperative line preferred)
 
 ## Building & Testing
 
@@ -133,4 +132,3 @@ mvn clean verify         # compile + unit tests + integration tests
 Tests use:
 - Wiremock for mocking external APIs
 - Token Validation Spring Test for generating test JWT tokens
-
