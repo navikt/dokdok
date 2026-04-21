@@ -2,7 +2,14 @@
 
 ## Copilot instructions
 
-Filen `copilot-instructions.md` inneholder noen generelle instruksjoner om kodestil, arkitekturvalg og teknologier i applikasjonene våre.
+Mappen `instructions/` inneholder to lag med instruksjoner:
+
+| Fil/mappe | Lastes | Formål |
+|-----------|--------|--------|
+| `copilot-instructions.md` | Alltid | Tech stack, modulstruktur, arkitektur, git-regler |
+| `scoped/` | Kun for relevante filer (via `applyTo`) | Domenespesifikke konvensjoner |
+
+### Repo-wide instructions (alltid lastet)
 
 Filen kan plasseres mange forskjellige steder for at copilot automatisk skal laste den. Om du ikke har en personlig instructions-fil kan du symlinke den inn i `.copilot`-mappen din:
 
@@ -11,6 +18,25 @@ Filen kan plasseres mange forskjellige steder for at copilot automatisk skal las
 Alternativt, f.eks. om du allerede har en personlig instructions-fil, kan du redigere din `.zshrc` / `.bashrc` og legge til følgende:
 
     export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="~/<path til dokdok-repoet>/utvikling/copilot/instructions/"
+
+### Path-scoped instructions (lastes kun for relevante filer)
+
+Filene i `scoped/` bruker `applyTo`-frontmatter for å begrense hvilke filer instruksjonene gjelder:
+
+| Fil | Gjelder for |
+|-----|-------------|
+| `general.instructions.md` | Alle `.java`-filer |
+| `database.instructions.md` | Repository-klasser, migrasjoner, SQL |
+| `api.instructions.md` | Endpoints, controllers, DataFetcher, Query |
+| `anticorruption.instructions.md` | Anti-corruption layer, consumers |
+| `testing.instructions.md` | Testklasser |
+| `config.instructions.md` | Config-klasser, `.properties`, NAIS-konfig |
+
+Symlink `scoped/`-mappen inn i et applikasjonsrepo:
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/instructions/scoped <repo>/.github/instructions
+
+> **Merk:** GitHub Copilot laster path-scoped instructions automatisk når du jobber med filer som matcher `applyTo`-mønsteret. Begge instruksjonslagene kombineres — repo-wide instruksjoner gjelder alltid, scoped instruksjoner legges til på toppen når relevant.
 
 ## Copilot Skills
 Denne mappen inneholder [Copilot Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) som er dokumentert og vedlikeholdt av teamet.
