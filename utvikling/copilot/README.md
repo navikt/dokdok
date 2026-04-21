@@ -9,15 +9,47 @@ Mappen `instructions/` inneholder to lag med instruksjoner:
 | `copilot-instructions.md` | Alltid | Tech stack, modulstruktur, arkitektur, git-regler |
 | `scoped/` | Kun for relevante filer (via `applyTo`) | Domenespesifikke konvensjoner |
 
-### Repo-wide instructions (alltid lastet)
+### Manuelt oppsett
 
-Filen kan plasseres mange forskjellige steder for at copilot automatisk skal laste den. Om du ikke har en personlig instructions-fil kan du symlinke den inn i `.copilot`-mappen din:
+Repo-wide instructions (symlink inn i `~/.copilot/`):
 
     ln -s ~/<path til dokdok-repoet>/utvikling/copilot/instructions/copilot-instructions.md ~/.copilot/
 
 Alternativt, f.eks. om du allerede har en personlig instructions-fil, kan du redigere din `.zshrc` / `.bashrc` og legge til følgende:
 
     export COPILOT_CUSTOM_INSTRUCTIONS_DIRS="~/<path til dokdok-repoet>/utvikling/copilot/instructions/"
+
+Path-scoped instructions i et applikasjonsrepo:
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/instructions/scoped <repo>/.github/instructions
+
+Skills (brukernivå):
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills ~/.copilot/
+
+Agents (brukernivå):
+
+    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/agents ~/.copilot/
+
+### Oppsett med script
+
+Bruk `setup.sh` for å sette opp symlinks automatisk i stedet for å gjøre det manuelt:
+
+```bash
+# Personlig oppsett: ~/.copilot/ (instructions, skills, agents)
+~/<path til dokdok-repoet>/utvikling/copilot/setup.sh --personal
+
+# Personlig + OpenCode (~/.config/opencode/)
+~/<path til dokdok-repoet>/utvikling/copilot/setup.sh --all
+
+# Scoped instructions i et applikasjonsrepo
+~/<path til dokdok-repoet>/utvikling/copilot/setup.sh --repo ~/nav/min-app
+
+# Kombiner
+~/<path til dokdok-repoet>/utvikling/copilot/setup.sh --personal --repo ~/nav/min-app
+```
+
+Scriptet er idempotent — kjøres det på nytt skjer ingenting om symlinkene allerede er korrekte.
 
 ### Path-scoped instructions (lastes kun for relevante filer)
 
@@ -32,18 +64,12 @@ Filene i `scoped/` bruker `applyTo`-frontmatter for å begrense hvilke filer ins
 | `testing.instructions.md` | Testklasser |
 | `config.instructions.md` | Config-klasser, `.properties`, NAIS-konfig |
 
-Symlink `scoped/`-mappen inn i et applikasjonsrepo:
-
-    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/instructions/scoped <repo>/.github/instructions
-
 > **Merk:** GitHub Copilot laster path-scoped instructions automatisk når du jobber med filer som matcher `applyTo`-mønsteret. Begge instruksjonslagene kombineres — repo-wide instruksjoner gjelder alltid, scoped instruksjoner legges til på toppen når relevant.
 
 ## Copilot Skills
 Denne mappen inneholder [Copilot Agent Skills](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) som er dokumentert og vedlikeholdt av teamet.
 
 Skills lastes inn on-demand av Copilot når de er relevante for det du spør om.
-
-## Bruke skills lokalt
 
 Det finnes to steder skills kan plasseres:
 
@@ -52,33 +78,13 @@ Det finnes to steder skills kan plasseres:
 | **Personlig** (brukernivå) | Tilgjengelig i alle repoer på maskinen din | `~/.copilot/skills/<skill-navn>/SKILL.md` |
 | **Repo-nivå** | Tilgjengelig for alle som jobber i repoet | `<repo>/.github/skills/<skill-navn>/SKILL.md` |
 
-1. Du kan bruke symlinks for å automatisk oppdatere skills fra dokdok-repoet i
-   din lokale mappe når du puller endringer fra repoet (dette funker i hvert fall på linux og macOS):
-
-       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills ~/.copilot/
-
-   Eventuelt kan du linke inn enkelt skill om du også har skills fra andre steder:
-
-       ln -s ~/<path til dokdok-repoet>/utvikling/copilot/skills/spring-boot-4-migration ~/.copilot/skills/spring-boot-4-migration
-
-
-1. Det er også mulig å bare kopiere ønsket skill-mappe til din lokale `~/.copilot/skills/`-mappe:
-
-   ```
-   ~/.copilot/
-   └── skills/
-       └── spring-boot-4-migration/
-           └── SKILL.md
-   ```
-
-2. Mappenavnet må matche `name`-feltet i YAML-frontmatteren i `SKILL.md`, være lowercase, og bruke bindestrek.
-
-3. Start Copilot CLI på nytt for å laste inn nye skills.
+Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett over.
 
 ### Tips
 
 - Du kan sjekke hvilke skills som er lastet inn ved å bruke `/skills list`-kommandoen i copilot-cli.
 - Om du legger til eller oppdaterer en skill kan du laste skills på nytt med `/skills reload`-kommandoen i copilot-cli.
+- Mappenavnet må matche `name`-feltet i YAML-frontmatteren i `SKILL.md`, være lowercase, og bruke bindestrek.
 
 ## Tilgjengelige skills
 
@@ -92,11 +98,9 @@ Det finnes to steder skills kan plasseres:
 
 Agenter er mer selvstendige enn skills — de utfører en hel arbeidsflyt fremfor å bare gi veiledning.
 
-Agenter plasseres i `~/.copilot/agents/<agent-navn>.md` (brukernivå) eller `<repo>/.github/agents/<agent-navn>.md` (repo-nivå).
+Agenter plasseres i `~/.copilot/agents/<agent-navn>/AGENT.md` (brukernivå) eller `<repo>/.github/agents/<agent-navn>/AGENT.md` (repo-nivå).
 
-Du kan symlinke mappen slik at du alltid har siste versjon:
-
-    ln -s ~/<path til dokdok-repoet>/utvikling/copilot/agents ~/.copilot/
+Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett over.
 
 ### Tilgjengelige agenter
 
