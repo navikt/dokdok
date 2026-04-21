@@ -66,7 +66,7 @@ Det finnes to steder skills kan plasseres:
 
 Agenter er mer selvstendige enn skills — de utfører en hel arbeidsflyt fremfor å bare gi veiledning.
 
-Agenter plasseres i `~/.copilot/agents/<agent-navn>/AGENT.md` (brukernivå) eller `<repo>/.github/agents/<agent-navn>/AGENT.md` (repo-nivå).
+Agenter plasseres i `~/.copilot/agents/<agent-navn>.md` (brukernivå) eller `<repo>/.github/agents/<agent-navn>.md` (repo-nivå).
 
 Du kan symlinke mappen slik at du alltid har siste versjon:
 
@@ -76,4 +76,4 @@ Du kan symlinke mappen slik at du alltid har siste versjon:
 
 | Agent | Beskrivelse |
 |-------|-------------|
-| [local-code-review](agents/local-code-review/AGENT.md) | Gjennomgår lokale endringer mot head-branch — sjekker lesbarhet, ansvarsdeling, navngiving og OWASP Top 10-sikkerhet |
+| [local-code-review](agents/local-code-review.agent.md) | Gjennomgår lokale endringer mot head-branch — sjekker lesbarhet, ansvarsdeling, navngiving og OWASP Top 10-sikkerhet |
