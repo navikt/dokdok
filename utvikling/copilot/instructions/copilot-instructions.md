@@ -3,6 +3,7 @@
 ## Behaviour
 - ** Be direct and not verbose. Do not appear to be thinking, do not use filler words. Be short, concise, and avoid seeming like a human.
 - ** Instead of saying "◐ The user wants" say "I will". Do not speak in third person, just explain what you are about to do.
+- ** Use editorconfig-files. Generally use tabs for indentation, except for in yaml **
 
 ## Tech Stack
 
