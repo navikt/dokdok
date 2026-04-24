@@ -231,8 +231,47 @@ env:
     value: "-Dio.netty.allocator.type=pooled"
 ```
 
-## Apache Camel is not yet compatible
+## Apache Camel migration
 
-As of Camel 4.17.0, Camel is not compatible with Spring Boot 4. Spring Boot 4 support in camel is expected in camel 4.19.0.
+Requires Camel **4.19.0+** for Boot 4.
 
-See: https://issues.apache.org/jira/browse/CAMEL-22463
+```xml
+<camel-spring-boot-bom.version>4.19.0</camel-spring-boot-bom.version>
+```
+
+### JMS health indicator → `camelHealth`
+
+Boot 4 removed `JmsHealthIndicator`. Replace with Camel's built-in:
+
+```properties
+# Before
+management.endpoint.health.group.liveness.include=jms
+# After
+management.endpoint.health.group.liveness.include=camelHealth
+```
+
+### JMS tests: explicit `JmsTemplate` bean
+
+Boot 4 no longer auto-configures `JmsTemplate` in tests with embedded Artemis:
+
+```java
+@TestConfiguration
+public class JmsItestConfig {
+    @Bean
+    @DependsOn("broker")
+    public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory) {
+        return new JmsTemplate(connectionFactory);
+    }
+}
+```
+
+### Embedded Kafka: remove hardcoded listeners
+
+Kafka 4 (KRaft) assigns ports dynamically. Hardcoded listeners cause CI conflicts:
+
+```java
+// Before
+@EmbeddedKafka(listeners = "PLAINTEXT://127.0.0.1:60172", ...)
+// After
+@EmbeddedKafka(...)
+```
