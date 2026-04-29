@@ -1,6 +1,6 @@
 ---
 name: spring-boot-4-migration
-description: Guide for migrating NAV/NAIS Spring Boot 3 applications to Spring Boot 4 (Spring Framework 7). Use this when upgrading a Spring Boot application to version 4, or when asked about Spring Boot 4 migration, breaking changes, renamed starters, Jackson 3, or Spring @Retryable.
+description: Guide for migrating NAV/NAIS Spring Boot 3 applications to Spring Boot 4 (Spring Framework 7). Use this when upgrading a Spring Boot application to version 4, or when asked about Spring Boot 4 migration, breaking changes, renamed starters, Jackson 3, Spring @Retryable, or Apache Camel migration.
 ---
 
 # Spring Boot 4 Migration Guide (NAV / NAIS)
@@ -172,7 +172,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - RestTestClient binding modes
 - `microsoft-graph` / `token-validation-spring-test` okhttp3 conflict
 - Netty 4.2 compatibility (`-Dio.netty.allocator.type=pooled`)
-- Apache Camel incompatibility
+- Apache Camel migration (see [camel-migration.md](references/camel-migration.md))
 
 ---
 
@@ -197,6 +197,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - [ ] Handle `fail-on-null-for-primitives` (property + manually constructed mappers in tests)
 - [ ] Add `-Dio.netty.allocator.type=pooled` to test argLine and naiserator.yaml `JAVA_OPTS` if using Netty-based clients
 - [ ] Replace Oracle-specific JPQL functions (e.g., `TO_DATE()` → JDBC date literals `{d '...'}`)
+- [ ] If using Apache Camel: update to 4.20.0+, add `camel-mdc` module, update health indicators (see [camel-migration.md](references/camel-migration.md))
 - [ ] Update third-party libraries for Boot 4 compatibility (IBM MQ → 4.x, datasource-proxy → 2.x, etc.)
 - [ ] Clean up unused dependencies (resilience4j-reactor, etc.)
 - [ ] Run `mvn clean verify` to ensure everything compiles and all tests (unit + integration) pass
