@@ -155,6 +155,18 @@ String content = IOUtils.toString(inputStream, UTF_8);
 String content = new String(inputStream.readAllBytes(), UTF_8);
 ```
 
+In `application-itest.properties`, replace `http://localhost:${wiremock.server.port}` with the `${wiremock.server.baseUrl}` placeholder provided by `wiremock-spring-boot`:
+
+```properties
+# Before (spring-cloud-contract-wiremock)
+some.endpoint.url=http://localhost:${wiremock.server.port}/rest
+
+# After (wiremock-spring-boot)
+some.endpoint.url=${wiremock.server.baseUrl}/rest
+```
+
+Also remove `wiremock.reset-mappings-after-each-test=true` — this property does not exist in `wiremock-spring-boot`.
+
 Docs: https://wiremock.org/docs/spring-boot/
 
 ## Hibernate 7: Fix Oracle-specific JPQL
@@ -233,10 +245,10 @@ env:
 
 ## Apache Camel migration
 
-Requires Camel **4.19.0+** for Boot 4.
+Requires Camel **4.20.0+** for Boot 4.
 
 ```xml
-<camel-spring-boot-bom.version>4.19.0</camel-spring-boot-bom.version>
+<camel-spring-boot-bom.version>4.20.0</camel-spring-boot-bom.version>
 ```
 
 ### JMS health indicator → `camelHealth`

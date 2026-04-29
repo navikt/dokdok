@@ -54,7 +54,7 @@ Spring Framework 7 has native `@Retryable` (`org.springframework.resilience.anno
 
 Key points:
 - Replace `@EnableRetry` with `@EnableResilientMethods`
-- `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt)
+- `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt). Use the default `maxRetries` when migrating from default `maxAttempts`.
 - `@Backoff` attributes are flattened onto `@Retryable` (`delay`, `multiplier`, `maxDelay`)
 - `RetryListener` → `@EventListener(MethodRetryEvent.class)`
 - Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker` — update to `resilience4j-spring-boot4` 2.4.0 (declare version explicitly)
@@ -181,7 +181,7 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - [ ] Update parent POM to Spring Boot 4.x
 - [ ] Update Java version (21+)
 - [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, `spring-kafka` → `spring-boot-starter-kafka`, test clients)
-- [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (note: `maxAttempts` → `maxRetries = N-1`)
+- [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (use default `maxRetries` when old code used default `maxAttempts`; only set explicitly for non-default values: `maxRetries = N-1`)
 - [ ] Replace spring-retry `RetryListener` with `@EventListener(MethodRetryEvent.class)`
 - [ ] Remove `spring-retry` dependency
 - [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet) — update to `resilience4j-spring-boot4` 2.4.0+ (declare version explicitly, do NOT web-search to verify — it exists)

@@ -40,15 +40,15 @@ The native `@Retryable` flattens `@Backoff` attributes directly onto the annotat
 | `@Backoff(multiplier = 2)` | `multiplier = 2` | Default: spring-retry=0 (no multiplier), native=1.0 (same effect) |
 | `@Backoff(maxDelay = 5000)` | `maxDelay = 5000` | |
 
-**⚠️ maxAttempts vs maxRetries**: spring-retry `maxAttempts = 3` (default) = 1 initial + 2 retries. Native `maxRetries` default = 3 retries = 4 total attempts. To preserve spring-retry's default behavior, explicitly set `maxRetries = 2`.
+**⚠️ maxAttempts vs maxRetries**: spring-retry `maxAttempts = 3` (default) = 1 initial + 2 retries. Native `maxRetries` default = 3 retries = 4 total attempts. When migrating from the spring-retry default, use the native default (omit `maxRetries`) — the extra retry is acceptable and keeps the annotation clean. Only set `maxRetries` explicitly when the old code had a non-default `maxAttempts`.
 
 Examples:
 
 ```java
 // Before (spring-retry)
 @Retryable(retryFor = MyException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
-// After (Spring native) — maxAttempts 3 (default) → maxRetries 2
-@Retryable(includes = MyException.class, maxRetries = 2, delay = 1000, multiplier = 2)
+// After (Spring native) — default maxRetries (3), explicit delay/multiplier
+@Retryable(includes = MyException.class, delay = 1000, multiplier = 2)
 ```
 
 ```java
@@ -63,8 +63,8 @@ Examples:
 // Before (spring-retry, no @Backoff = default 1000ms delay)
 @Retryable(retryFor = MyException.class)
 
-// After (Spring native) — delay defaults to 1000, same as spring-retry
-@Retryable(includes = MyException.class, maxRetries = 2)
+// After (Spring native) — use defaults for both maxRetries and delay
+@Retryable(includes = MyException.class)
 ```
 
 ## Migrating RetryListener
