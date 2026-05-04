@@ -7,10 +7,11 @@ Spring Framework 7 has native `@Retryable` (`org.springframework.resilience.anno
 ## Setup
 
 ```java
-// Replace @EnableRetry (spring-retry) with:
+// Replace @EnableRetry (spring-retry) with @EnableResilientMethods on ONE config class.
+// Do NOT put it on both the Application class AND a separate config class — it only needs to appear once.
 @EnableResilientMethods
-@SpringBootApplication
-public class Application { ... }
+@Configuration
+public class ApplicationConfig { ... }
 ```
 
 ```xml
@@ -42,13 +43,15 @@ The native `@Retryable` flattens `@Backoff` attributes directly onto the annotat
 
 **⚠️ maxAttempts vs maxRetries**: spring-retry `maxAttempts = 3` (default) = 1 initial + 2 retries. Native `maxRetries` default = 3 retries = 4 total attempts. When migrating from the spring-retry default, use the native default (omit `maxRetries`) — the extra retry is acceptable and keeps the annotation clean. Only set `maxRetries` explicitly when the old code had a non-default `maxAttempts`.
 
+**⚠️ Prefer defaults**: Native defaults are `maxRetries=3`, `delay=1000ms`, `multiplier=1.0`. When old spring-retry code used values close to these defaults (e.g. `maxAttempts=3`, `delay=500`), **omit those parameters entirely** and use defaults. Only specify attributes that differ significantly from defaults or have special error handling requirements. This keeps annotations clean and readable. For example, if the old code used `multiplier=2`, that differs from the default `1.0` and should be specified explicitly.
+
 Examples:
 
 ```java
-// Before (spring-retry)
-@Retryable(retryFor = MyException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
-// After (Spring native) — default maxRetries (3), explicit delay/multiplier
-@Retryable(includes = MyException.class, delay = 1000, multiplier = 2)
+// Before (spring-retry) — default maxAttempts, custom delay/multiplier
+@Retryable(retryFor = MyException.class, backoff = @Backoff(delay = 500, multiplier = 2))
+// After (Spring native) — omit maxRetries (default 3 is fine), omit delay (default 1000ms is close enough), keep multiplier (differs from default 1.0)
+@Retryable(includes = MyException.class, multiplier = 2)
 ```
 
 ```java

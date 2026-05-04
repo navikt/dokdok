@@ -53,9 +53,10 @@ Also verify `spring.aop.auto` is **not** set to `false` in `application.properti
 Spring Framework 7 has native `@Retryable` (`org.springframework.resilience.annotation`). This replaces **both** spring-retry's `@Retryable` and resilience4j's `@Retry`. There is no native Spring circuit breaker yet — keep resilience4j `@CircuitBreaker`.
 
 Key points:
-- Replace `@EnableRetry` with `@EnableResilientMethods`
-- `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt). Use the default `maxRetries` when migrating from default `maxAttempts`.
-- `@Backoff` attributes are flattened onto `@Retryable` (`delay`, `multiplier`, `maxDelay`)
+- Replace `@EnableRetry` with `@EnableResilientMethods` — only needed **once** (e.g. on `ApplicationConfig`), do NOT duplicate on both Application class and config class
+- **Prefer defaults over explicit values.** Native defaults are `maxRetries=3` (4 total attempts), `delay=1000ms`. When the old spring-retry code used default `maxAttempts=3` and `delay` close to the default (e.g. 500ms), just omit those parameters entirely. Only set `maxRetries`/`delay` explicitly when the old code had significantly different values or special error handling requirements.
+- `maxAttempts` (spring-retry) → `maxRetries = N - 1` (native counts only retries, not initial attempt) — but only set explicitly for non-default values
+- `@Backoff` attributes are flattened onto `@Retryable` (`delay`, `multiplier`, `maxDelay`) — omit attributes that match the native defaults
 - `RetryListener` → `@EventListener(MethodRetryEvent.class)`
 - Remove `spring-retry` dependency; keep resilience4j only for `@CircuitBreaker` — update to `resilience4j-spring-boot4` 2.4.0 (declare version explicitly)
 - **Do NOT search Maven Central or other registries** to verify the existence of `resilience4j-spring-boot4`. This exists: `resilience4j-spring-boot4` (2.4.0), AI agents get 403 from central sources.
@@ -107,6 +108,21 @@ JsonMapper mapper = JsonMapper.builder()
     .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
     .build();
 ```
+
+**Also important:** If WebClient code uses custom `ExchangeStrategies.builder().codecs(...)`, those codecs do NOT inherit the Spring-managed Jackson config (including this property). Replace `ExchangeStrategies` with `WebClient.Builder.codecs()` which preserves defaults:
+```java
+// Before (broken in Boot 4 — creates codecs from scratch, ignores Spring Jackson config)
+webClient.mutate()
+    .exchangeStrategies(ExchangeStrategies.builder()
+        .codecs(c -> c.defaultCodecs().maxInMemorySize(...))
+        .build())
+
+// After (preserves Spring-managed Jackson config)
+webClient.mutate()
+    .codecs(c -> c.defaultCodecs().maxInMemorySize(...))
+```
+
+As a complementary fix, change primitive DTO fields (`long`, `int`, `boolean`) to their boxed counterparts (`Long`, `Integer`, `Boolean`) when the JSON may contain `null` values for those fields.
 
 ---
 
@@ -181,11 +197,11 @@ See [breaking-changes.md](references/breaking-changes.md) for full details on al
 - [ ] Update parent POM to Spring Boot 4.x
 - [ ] Update Java version (21+)
 - [ ] Rename starters (`aop` → `aspectj`, `web` → `webmvc`, `spring-kafka` → `spring-boot-starter-kafka`, test clients)
-- [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods` (use default `maxRetries` when old code used default `maxAttempts`; only set explicitly for non-default values: `maxRetries = N-1`)
+- [ ] Replace resilience4j `@Retry` and spring-retry `@Retryable` / `@Backoff` / `@EnableRetry` with Spring native `@Retryable` / `@EnableResilientMethods`. **Prefer defaults:** omit `maxRetries` and `delay` when old values were close to native defaults (3 retries, 1000ms). Only specify attributes that differ significantly from defaults (e.g. a custom `multiplier`).
 - [ ] Replace spring-retry `RetryListener` with `@EventListener(MethodRetryEvent.class)`
 - [ ] Remove `spring-retry` dependency
 - [ ] Keep resilience4j `@CircuitBreaker` (no Spring native alternative yet) — update to `resilience4j-spring-boot4` 2.4.0+ (declare version explicitly, do NOT web-search to verify — it exists)
-- [ ] Add `@EnableResilientMethods` to Application class
+- [ ] Add `@EnableResilientMethods` to **one** configuration class (not duplicated on both Application and a separate Config class)
 - [ ] Verify `spring.aop.auto` is NOT set to false
 - [ ] Update Jackson **databind/core** imports (`com.fasterxml.jackson.databind` → `tools.jackson.databind`, `com.fasterxml.jackson.core` → `tools.jackson.core`). **Do NOT change annotation imports** — `com.fasterxml.jackson.annotation.*` stays as-is.
 - [ ] Fix Jackson 3 API changes (e.g., `Reference.getFieldName()` → `Reference.getPropertyName()`)
