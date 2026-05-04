@@ -36,6 +36,83 @@ link_safe() {
   fi
 }
 
+# --- OpenCode agent permission mapping ---
+# Returns mode + permission YAML for a given agent name.
+# Add explicit cases here only for agents that need non-default permissions.
+get_opencode_permission() {
+  case "$1" in
+    local-code-review)
+      cat <<'EOF'
+mode: subagent
+permission:
+  edit: deny
+  bash:
+    "*": deny
+    "git diff*": allow
+    "git log*": allow
+    "git merge-base*": allow
+EOF
+      ;;
+    *)
+      info "  Using default permissions for agent: $1" >&2
+      cat <<'EOF'
+mode: subagent
+permission:
+  edit: deny
+  bash: deny
+EOF
+      ;;
+  esac
+}
+
+# --- Sync agents to OpenCode format ---
+# Transforms <name>.agent.md → <name>.md with OpenCode-compatible frontmatter.
+sync_opencode_agents() {
+  local agents_src="$SCRIPT_DIR/agents"
+  local agents_dst="$HOME/.config/opencode/agents"
+  mkdir -p "$agents_dst"
+
+  for src_file in "$agents_src"/*.agent.md; do
+    [[ -f "$src_file" ]] || continue
+
+    local basename
+    basename="$(basename "$src_file")"
+    local name="${basename%.agent.md}"
+    local dst_file="$agents_dst/$name.md"
+
+    # Extract description (multiline YAML scalar after 'description: >')
+    local description
+    description="$(awk '
+      /^description:/ { found=1; sub(/^description: *>? */, ""); if ($0) print; next }
+      found && /^  / { sub(/^  /, ""); print; next }
+      found { exit }
+    ' "$src_file")"
+
+    # Replace /agentname invocations with @agentname
+    description="$(echo "$description" | sed "s|\"/$name |\"@$name |g")"
+
+    # Extract body (everything after the closing --- of frontmatter)
+    local body
+    body="$(awk '
+      BEGIN { count=0 }
+      /^---$/ { count++; if (count==2) { found=1; next } }
+      found { print }
+    ' "$src_file")"
+
+    # Build OpenCode-compatible file
+    {
+      echo "---"
+      echo "description: >"
+      echo "$description" | sed 's/^/  /'
+      get_opencode_permission "$name"
+      echo "---"
+      echo "$body"
+    } > "$dst_file"
+
+    ok "$dst_file"
+  done
+}
+
 # --- Setup functions ---
 setup_personal() {
   info "Setting up ~/.copilot/ ..."
@@ -61,6 +138,7 @@ setup_opencode() {
   mkdir -p ~/.config/opencode
   link_safe ~/.config/opencode/skills    "$SCRIPT_DIR/skills"
   link_safe ~/.config/opencode/AGENTS.md "$SCRIPT_DIR/instructions/copilot-instructions.md"
+  sync_opencode_agents
 }
 
 # --- Usage ---
