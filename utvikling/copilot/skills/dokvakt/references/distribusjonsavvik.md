@@ -31,7 +31,7 @@ To verdikjeder distribuerer til sentral print:
 | Dist.status | Dok.status | Oppfølging |
 |-------------|-----------|------------|
 | KLAR_FOR_DIST | KLAR_FOR_DIST | Feilet i QDIST009 / ligger på backoutkø. Forsøk rekjøring først. Sjekk logger. Ved vedvarende funksjonell feil: ta av kø, patch status til FEILET, meld fra til bestiller. |
-| OVERSENDT | BEKREFTET | PDF-print: bekreftet mottatt men ikke kvittert EKSPEDERT. Etterlys status hos Skatteetaten — oppgi `dokumentId` (mailpieceId). Epost: Preprint@skatteetaten.no |
+| OVERSENDT | BEKREFTET | PDF-print: bekreftet mottatt men ikke kvittert EKSPEDERT. Etterlys status hos Skatteetaten — oppgi `dokumentId` (mailpieceId). |
 | BEKREFTET | OVERSENDT | AFP-print: bekreftet mottatt men ikke kvittert EKSPEDERT. Samme oppfølging som over. |
 | OVERSENDT | OVERSENDT | Skatteetaten har ikke bekreftet mottak. Kjent problem, trolig filsluse. |
 | OVERSENDT/BEKREFTET | EKSPEDERT | Happy case — printet, pakket og levert til posten. |
@@ -45,7 +45,7 @@ Distribusjon via Digdir til DigiPost/e-Boks. De fleste avvik skyldes forsinkede/
 | Dist.status | Dok.status | Oppfølging |
 |-------------|-----------|------------|
 | KLAR_FOR_DIST | KLAR_FOR_DIST | Feilet i QDIST011, ligger på backoutkø `P_DOKDISTEFORMIDLING.QDIST011_DIST_TIL_DPI_BOQ`. Forsøk rekjøring. Ved vedvarende feil: ta av kø, patch til FEILET, meld til bestiller. |
-| OVERSENDT | OVERSENDT | Sendt til Digdir men ingen bekreftelse innen frist. Etterlys status hos Digdir — oppgi `KONVERSASJON_ID`. Epost: servicedesk@digdir.no |
+| OVERSENDT | OVERSENDT | Sendt til Digdir men ingen bekreftelse innen frist. Etterlys status hos Digdir — oppgi `KONVERSASJON_ID`. |
 | EKSPEDERT | EKSPEDERT | Happy case — bekreftelse fra postkasseleverandør mottatt. |
 
 ---
@@ -59,8 +59,6 @@ Distribusjon til NETS av e-fakturaer fra OEBS, ELIN og PREDATOR. Avvik er sjeldn
 | OVERSENDT | OVERSENDT | Sendt til NETS, men ingen bekreftelse innen frist. |
 | FEILET | FEILET | Sjekk `feilkvittering.detaljer`. Typiske feil: "Receiver not found", "B2C issuer blocked", "Ugyldig forfallsdato". Teamet trenger **ikke** varsle — NETS varsler via "Daily forsendelsesrapport" og avvikene håndteres av OEBS/SITS. |
 | BEKREFTET | EKSPEDERT | Happy case. |
-
-Purring ved behov: payments-no@nets.eu
 
 ---
 

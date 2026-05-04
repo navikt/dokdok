@@ -34,4 +34,4 @@ Please include the id concerning this speciffic error [...uuid...]. og guid=...u
 
 **Tiltak:** Legg meldingen tilbake på `P_DOKDISTDPV.QDIST016_DIST_TIL_DPV`. Vil mest sannsynlig gå gjennom.
 
-Hvis den feiler igjen → kontakt Altinn på servicedesk@altinn.no med feilmeldingen (inkluder UUIDs).
+Hvis den feiler igjen → kontakt Altinn med feilmeldingen (inkluder UUIDs).
