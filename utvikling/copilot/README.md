@@ -93,6 +93,7 @@ Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett ove
 | [migrate-to-restclient](skills/migrate-to-restclient/SKILL.md) | Guide for migrering fra WebClient/RestTemplate til RestClient med NAIS Texas-tokenveksling |
 | [owasp-top-10-2025](skills/owasp-top-10-2025/SKILL.md) | Sikkerhetsregler basert på OWASP Top 10:2025 — tilgangskontroll, injeksjon, kryptografi, logging m.m. |
 | [spring-boot-4-migration](skills/spring-boot-4-migration/SKILL.md) | Guide for migrering av NAV/NAIS Spring Boot 3-applikasjoner til Spring Boot 4 |
+| [dokvakt](skills/dokvakt/SKILL.md) | Vaktguide for Team Dokumentløsninger — MQ-køfeil, DB-patching, distribusjons- og skanningavvik |
 
 ## Copilot Agents
 
@@ -107,3 +108,4 @@ Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett ove
 | Agent | Beskrivelse |
 |-------|-------------|
 | [local-code-review](agents/local-code-review.agent.md) | Gjennomgår lokale endringer mot head-branch — sjekker lesbarhet, ansvarsdeling, navngiving og OWASP Top 10-sikkerhet |
+| [dokvakt](agents/dokvakt.agent.md) | Vaktassistent for Team Dokumentløsninger — feilsøking av MQ-køer, DB-patching, distribusjons-/skanningavvik, med steg-for-steg-guider |
