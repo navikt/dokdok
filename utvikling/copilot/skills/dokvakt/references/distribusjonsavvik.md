@@ -20,6 +20,21 @@ where di.k_dist_kanal = '<kanal>'
 group by di.k_dist_kanal, di.k_dist_status, do.k_dokument_status;
 ```
 
+**Alle forsendelser for gitte journalposter:**
+
+```sql
+-- dokument_id  = forsendelseId i avviksrapporten
+-- distribusjon_id = bestillingsId/distribusjonId i avviksrapporten
+-- arkivkode    = journalpostId
+select di.distribusjon_id, di.k_dist_kanal, di.k_dist_status,
+       do.dokument_id, do.k_dokument_status, do.arkivkode as journalpost_id,
+       di.distribusjon_dato
+from distribusjon_info di
+join dokument_info do on di.distribusjon_info_id = do.distribusjon_info_id
+where do.arkivkode in ('<journalpostId>')
+order by do.arkivkode, di.distribusjon_dato;
+```
+
 ---
 
 ## 1. Distribusjonsavvik PRINT
