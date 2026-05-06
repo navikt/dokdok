@@ -107,3 +107,4 @@ Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett ove
 | Agent | Beskrivelse |
 |-------|-------------|
 | [local-code-review](agents/local-code-review.agent.md) | Gjennomgår lokale endringer mot head-branch — sjekker lesbarhet, ansvarsdeling, navngiving og OWASP Top 10-sikkerhet |
+| [springdoc-agent](agents/springdoc.agent.md) | Analyserer og forbetrar OpenAPI-dokumentasjon for REST-endepunkt med Springdoc — legg til annotasjonar, eksempel-verdiar og statuskoder |
