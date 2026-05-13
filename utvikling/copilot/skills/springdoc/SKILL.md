@@ -67,6 +67,7 @@ public class JournalpostResponse {
 
 ## Praksisar
 
+- REST-endepunkta ligg i filer med `RestController`-annotasjon.
 - Alle endepunkt skal ha `@Operation` med `summary`, `description` og `operationId`
 - Bruk `tags` i `@Operation` for logisk gruppering av relaterte endepunkt
 - Alle statuskoder som faktisk blir returnerte skal ha `@ApiResponse` (inkl. 401/403 for sikra endepunkt)
