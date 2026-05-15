@@ -6,6 +6,7 @@ description: >
   "/dokvakt melding på qdok001_funksjonell_feil med bestillingsId abc-123"
   "/dokvakt distribusjonsavvik for TRYGDERETTEN — 5 forsendelser ikke kvittert"
   "/dokvakt skanningavvik — bjoark003 rapporterer manglende filer"
+model: auto
 ---
 
 # Dokvakt Agent

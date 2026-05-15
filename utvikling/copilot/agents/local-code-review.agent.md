@@ -7,6 +7,7 @@ description: >
   and resilience (timeouts, retries, graceful degradation).
   Use this when you want a structured review of uncommitted or unpushed changes before
   opening a pull request.
+model: auto
 ---
 
 # Local Code Review Agent
