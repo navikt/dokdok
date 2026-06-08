@@ -52,4 +52,4 @@ Fant ingen journalpost med journalpostId=XXXX
 
 Journalposter kan ha blitt slettet.
 
-**Tiltak:** Undersøk lenger tilbake i loggene for å se om journalposten er slettet.
+**Tiltak:** Undersøk lenger tilbake i loggene for å se om journalposten er slettet. Dersom journalposten er slettet kan meldingen også slettes.
