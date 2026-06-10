@@ -89,3 +89,12 @@ Forsendelser behandles av QDIST013 via Altinn Meldingsformidler. Kvitteringer mo
 | EKSPEDERT | EKSPEDERT | Happy case. |
 
 Se også: `trygderetten-kvitteringer.md` for detaljert oppfølging av manglende kvitteringer.
+
+## 5. Distribusjonsavvik DITTNAV
+
+Start med å sjekke i dokumentdistribusjon-databasen distribusjonsstatus og dokumentstatus for de aktuelle forsendelsene.
+
+Dersom status er OVERSENDT, sjekk med minside-varsler på Slack om de kan se noe rart for gitt distribusjonId (varselId i kafka eventen).
+Det kan feks kafka problematikk som har gjort at bestilling av sms og epost videre til doknotifikasjon-2 ikke har skjedd, da kan de isf trigge bestilling på nytt.
+Dersom det gjelder noe som allerde har blitt lest av bruker på min side kan distribusjonen patches til EKSPEDERT, og det vil ikke være nødvendig å sende noen varsler (dato_lest vil da isf være satt på journalposten). Det er mulig at det her ikke er noen innslag i doknotifikasjon-databasen dersom kafka-eventen ikke har blitt sendt av min-side.
+
