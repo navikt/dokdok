@@ -4,7 +4,7 @@ Håndtering av feil i skanning-mottak fra Iron Mountain og avviksrapportering.
 
 ## Bakgrunn
 
-Fra tid til annen feiler overføringen av filer fra Iron Mountain til NAV. Bjoark003 gjør avstemming og oppretter IKT-saker ved avvik. Typisk sak:
+Fra tid til annen feiler overføringen av filer fra Iron Mountain til Nav. Bjoark003 gjør avstemming og oppretter IKT-saker ved avvik. Typisk sak:
 
 ```
 Filer lest:
@@ -62,7 +62,7 @@ Send epost:
 #### Epost-mal: Manglende filer
 
 ```
-Emne: NAV - manglende filer i avstemmingsfil SKANMOT<app> datert <dd.mm>
+Emne: Nav - manglende filer i avstemmingsfil SKANMOT<app> datert <dd.mm>
 
 Hei
 
@@ -80,22 +80,22 @@ Filer som ikke ble funnet:
 #### Epost-mal: Manglende avstemmingsfiler
 
 ```
-Emne: NAV savner avstemmingsfiler for <områder> <dd.mm>
+Emne: Nav savner avstemmingsfiler for <områder> <dd.mm>
 
 Hei Iron Mountain
 
-NAV savner avstemmingsfiler for områdene <SKANMOTREFERANSENR/SKANMOTUTGAAENDE/etc> for den <dd.mm>.
+Nav savner avstemmingsfiler for områdene <SKANMOTREFERANSENR/SKANMOTUTGAAENDE/etc> for den <dd.mm>.
 Kan dere også kvalitetssikre at de inneholder riktig data før de sendes over på nytt.
 ```
 
 #### Epost-mal: Feil metadata
 
 ```
-Emne: NAV savner filer fra <SKANMOT-app> <dd.mm>
+Emne: Nav savner filer fra <SKANMOT-app> <dd.mm>
 
 Hei Iron Mountain
 
-NAV savner filer som feilet under avstemming den <dd.mm>.
+Nav savner filer som feilet under avstemming den <dd.mm>.
 
 Antall filer avstemt: <antall>
 Antall filer funnet: <antall>

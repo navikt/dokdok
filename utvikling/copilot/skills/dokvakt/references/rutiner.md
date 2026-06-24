@@ -45,6 +45,9 @@ Hele teamet har kollektivt ansvar for å bidra i disse kanalene.
 
 Periodiske jobber varsler via Slack dersom de feiler. Undersøk logger (Grafana/Loki e.l.).
 
+Tekniske/funksjonelle feil for skanmot-appene blir også varslet om via Slack:
+- `feil-i-skanning.md`
+
 ### Jobber som overvåkes
 
 | Applikasjon | Jobb | Beskrivelse |
