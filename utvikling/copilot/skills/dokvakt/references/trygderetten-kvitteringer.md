@@ -30,6 +30,8 @@ Send epost til Trygderetten og Klageinstans med teamet på kopi:
 - **Klageinstans:** E-post til klageinstans (sjekk med teamet for riktig adresse)
 - **Kopi:** teamdokumenthandtering-epost
 
+Merk: vi har også en slack-kanal for kommunikasjon.
+
 #### Epost-mal
 
 ```

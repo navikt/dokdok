@@ -77,7 +77,7 @@ Distribusjon til NETS av e-fakturaer fra OEBS, ELIN og PREDATOR. Avvik er sjeldn
 
 ---
 
-## 4. Distribusjonsavvik TRYGDERETTEN
+## 4. Distribusjonsavvik TRYGDERETTEN (eller DPO med trygderettens orgnr)
 
 Forsendelser behandles av QDIST013 via Altinn Meldingsformidler. Kvitteringer mottas normalt innen minutter (sdist001 sjekker hvert 10. minutt). DokdistAvstemming rapporterer etter 6 timer.
 
@@ -98,3 +98,10 @@ Dersom status er OVERSENDT, sjekk med minside-varsler på Slack om de kan se noe
 Det kan feks kafka problematikk som har gjort at bestilling av sms og epost videre til doknotifikasjon-2 ikke har skjedd, da kan de isf trigge bestilling på nytt.
 Dersom det gjelder noe som allerde har blitt lest av bruker på min side kan distribusjonen patches til EKSPEDERT, og det vil ikke være nødvendig å sende noen varsler (dato_lest vil da isf være satt på journalposten). Det er mulig at det her ikke er noen innslag i doknotifikasjon-databasen dersom kafka-eventen ikke har blitt sendt av min-side.
 
+## 6. Distribusjonsavvik DPO
+
+Meldinger til trygderetten sendes nå via DPO. Om meldingen skal til trygderetten, se avsnitt 4.
+
+## 7. Distribusjonavvik DPVT
+
+Distribusjon til virksomheter som mottar meldinger i Altinn.
