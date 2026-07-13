@@ -10,11 +10,14 @@ description: >
 ### ✅ Godt annotert endepunkt
 
 ```java
+// På klassa:
+// @Tag(name = "Journalpost", description = "Operasjonar for journalpostar")
+// @RestController
+
 @Operation(
     summary = "Hent journalpost",
     description = "Hentar ein journalpost basert på journalpostId",
-    operationId = "hentJournalpost",
-    tags = {"Journalpost"}
+    operationId = "hentJournalpost"
 )
 @ApiResponses({
     @ApiResponse(
@@ -37,7 +40,6 @@ description: >
     @ApiResponse(responseCode = "404", description = "Journalpost ikkje funnen"),
     @ApiResponse(responseCode = "500", description = "Intern feil")
 })
-@SecurityRequirement(name = "bearer-token")
 @GetMapping("/journalpost/{journalpostId}")
 public ResponseEntity<JournalpostResponse> hentJournalpost(
         @Parameter(description = "Unik ID for journalposten", example = "123456789")
@@ -69,9 +71,9 @@ public class JournalpostResponse {
 
 - REST-endepunkta ligg i filer med `RestController`-annotasjon.
 - Alle endepunkt skal ha `@Operation` med `summary`, `description` og `operationId`
-- Bruk `tags` i `@Operation` for logisk gruppering av relaterte endepunkt
+- Bruk `@Tag` på `@RestController`-klassa for logisk gruppering. Unngå `tags` i `@Operation` dersom klassa har fleire operasjonar
 - Alle statuskoder som faktisk blir returnerte skal ha `@ApiResponse` (inkl. 401/403 for sikra endepunkt)
-- Bruk `@SecurityRequirement` på endepunkt som krev autentisering
+- Bruk `@SecurityRequirement` på endepunkt som krev autentisering, **med mindre** prosjektet har ei `SpringdocConfig`-fil som set dette globalt
 - Request-parametrar (`@PathVariable`, `@RequestParam`) skal ha `@Parameter` med `description` og `example`
 - DTO-klasser skal ha `@Schema` på klassenivå (`description`) og på kvart felt (`description` + `example`)
 - `@ExampleObject` på operasjonsnivå for rike/samansette eksempel, `@Schema(example=...)` på felt for enkle verdiar
