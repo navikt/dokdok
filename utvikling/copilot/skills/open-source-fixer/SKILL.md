@@ -59,6 +59,9 @@ This file shall have the following disposition.
 Content in existing README shall be moved to the relevant section.
 Let the user review this.
 
+Any links pointing to confluence.adeo.no or intern.dev.nav.no shall be suffixed with (Nav-internt).
+Example: [Swagger (Nav-internt)](https://dokdok.intern.dev.nav.no/swagger-ui.html)
+
 ````markdown
 # Navn på appen
 
