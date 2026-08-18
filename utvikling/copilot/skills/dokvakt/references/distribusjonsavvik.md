@@ -23,7 +23,7 @@ group by di.k_dist_kanal, di.k_dist_status, do.k_dokument_status;
 **Alle forsendelser for gitte journalposter:**
 
 ```sql
--- dokument_id  = forsendelseId i avviksrapporten
+-- dokument_info_id  = forsendelseId i avviksrapporten
 -- distribusjon_id = bestillingsId/distribusjonId i avviksrapporten
 -- arkivkode    = journalpostId
 select di.distribusjon_id, di.k_dist_kanal, di.k_dist_status,
