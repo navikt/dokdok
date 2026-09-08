@@ -98,6 +98,7 @@ Bruk `setup.sh --personal` eller symlink manuelt — se avsnittet om oppsett ove
 | [spring-boot-4-migration](skills/spring-boot-4-migration/SKILL.md) | Guide for migrering av NAV/NAIS Spring Boot 3-applikasjoner til Spring Boot 4                         |
 | [dokvakt](skills/dokvakt/SKILL.md)                                 | Vaktguide for Team Dokumentløsninger — MQ-køfeil, DB-patching, distribusjons- og skanningavvik        |
 | [springdoc](skills/springdoc/SKILL.md)                             | Held API-dokumentasjon for REST ved bruk av Springdoc for Spring Boot oppdatert                       |
+| [team-release-status](skills/team-release-status/SKILL.md)         | Finn team-repoer med endringer som ikke er releaset til produksjon                                   |
 
 ## Copilot Agents
 
