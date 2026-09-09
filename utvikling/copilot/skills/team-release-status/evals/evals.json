@@ -12,6 +12,9 @@
         "Nettsiden inneholder søk, statusfilter og sorterbare kolonner.",
         "Hvert repo har en egen lenke til repoets GitHub Releases-side.",
         "Resultatet inneholder en sorterbar kolonne med antall åpne pull requests og lenke til repoets pull requests.",
+        "Nettsiden kan filtrere frem repoer der Dependabot er pauset, uten en egen Dependabot-kolonne.",
+        "Dependabot security updates med enabled=false må ikke presenteres som om vanlige Dependabot-versjonsoppdateringer er deaktivert.",
+        "Feil ved henting av Dependabot-status vises eksplisitt og gir exitkode 2.",
         "Resultatet inneholder kolonnen Dager siden release.",
         "Produksjonsversjonen hentes fra siste vellykkede release-triggerede deploy-prod-workflow.",
         "Nyeste publiserte GitHub Release verifiseres direkte mot en vellykket workflow-run med samme tag."

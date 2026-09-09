@@ -43,6 +43,8 @@ class Assessment:
 	release_age_days: int = 0
 	compare_url: str = ""
 	open_pull_requests: int | None = None
+	dependabot_status: str = "unknown"
+	dependabot_error: str = ""
 
 
 def gh_json(endpoint: str, *, paginate: bool = False) -> Any:
@@ -127,6 +129,21 @@ def open_pull_request_count(org: str, repo: str) -> int:
 	return len(pulls)
 
 
+def get_dependabot_status(org: str, repo: str) -> str:
+	try:
+		payload = gh_json(f"repos/{org}/{repo}/automated-security-fixes")
+	except GitHubError as error:
+		if "HTTP 404" in str(error):
+			return "unknown"
+		raise
+	if not isinstance(payload, dict):
+		raise GitHubError("unexpected Dependabot status response")
+	paused = payload.get("paused")
+	if not isinstance(paused, bool):
+		raise GitHubError("Dependabot status response is missing paused")
+	return "paused" if paused else "not_paused"
+
+
 def assess_repo(
 	org: str,
 	repo: dict[str, Any],
@@ -135,15 +152,25 @@ def assess_repo(
 ) -> Assessment:
 	name = str(repo["name"])
 	open_pull_requests: int | None = None
+	dependabot_status = "unknown"
+	dependabot_error = ""
 
 	try:
 		open_pull_requests = open_pull_request_count(org, name)
+		try:
+			dependabot_status = get_dependabot_status(org, name)
+		except (GitHubError, KeyError, TypeError, ValueError) as error:
+			dependabot_status = "error"
+			dependabot_error = str(error).replace("\n", " ")
+
 		if repo.get("archived"):
 			return Assessment(
 				name,
 				"excluded",
 				"arkivert",
 				open_pull_requests=open_pull_requests,
+				dependabot_status=dependabot_status,
+				dependabot_error=dependabot_error,
 			)
 
 		workflows_payload = gh_json(f"repos/{org}/{name}/actions/workflows?per_page=100")
@@ -162,6 +189,8 @@ def assess_repo(
 				"excluded",
 				f"mangler aktiv {workflow_path}",
 				open_pull_requests=open_pull_requests,
+				dependabot_status=dependabot_status,
+				dependabot_error=dependabot_error,
 			)
 
 		run = latest_release_run(org, name, int(workflow["id"]))
@@ -171,6 +200,8 @@ def assess_repo(
 				"excluded",
 				"ingen vellykket produksjonsrelease",
 				open_pull_requests=open_pull_requests,
+				dependabot_status=dependabot_status,
+				dependabot_error=dependabot_error,
 			)
 
 		release_sha = run["head_sha"]
@@ -181,6 +212,8 @@ def assess_repo(
 				"error",
 				"repoet mangler default branch",
 				open_pull_requests=open_pull_requests,
+				dependabot_status=dependabot_status,
+				dependabot_error=dependabot_error,
 			)
 
 		head = gh_json(f"repos/{org}/{name}/commits/{quote(str(default_branch), safe='')}")
@@ -193,6 +226,8 @@ def assess_repo(
 				"error",
 				"prod-commit og default branch har divergerte historikker",
 				open_pull_requests=open_pull_requests,
+				dependabot_status=dependabot_status,
+				dependabot_error=dependabot_error,
 			)
 
 		ahead_by = int(comparison.get("ahead_by", 0))
@@ -207,6 +242,8 @@ def assess_repo(
 			release_age_days=release_age_days(created_at, now),
 			compare_url=compare_url,
 			open_pull_requests=open_pull_requests,
+			dependabot_status=dependabot_status,
+			dependabot_error=dependabot_error,
 		)
 	except (GitHubError, KeyError, TypeError, ValueError) as error:
 		return Assessment(
@@ -214,6 +251,8 @@ def assess_repo(
 			"error",
 			str(error).replace("\n", " "),
 			open_pull_requests=open_pull_requests,
+			dependabot_status=dependabot_status,
+			dependabot_error=dependabot_error,
 		)
 
 
@@ -257,7 +296,8 @@ def print_report(
 	for item in unreleased:
 		print(
 			f"| [{item.repo}](https://github.com/{org}/{item.repo}) "
-			f"| {item.open_pull_requests} | {item.ahead_by} | {item.release_date} | {item.release_age_days} "
+			f"| {item.open_pull_requests} | {item.ahead_by} | {item.release_date} "
+			f"| {item.release_age_days} "
 			f"| [Sammenlign]({item.compare_url}) |"
 		)
 	if not unreleased:
@@ -282,6 +322,19 @@ def print_report(
 			open_pull_requests = item.open_pull_requests if item.open_pull_requests is not None else "–"
 			print(f"| {item.repo} | {open_pull_requests} | {item.reason} |")
 
+	dependabot_errors = sorted(
+		(item for item in assessments if item.dependabot_status == "error"),
+		key=lambda item: item.repo.lower(),
+	)
+	if dependabot_errors:
+		print()
+		print("**Kunne ikke hente Dependabot-status**")
+		print()
+		print("| Repo | Feil |")
+		print("|---|---|")
+		for item in dependabot_errors:
+			print(f"| {item.repo} | {item.dependabot_error} |")
+
 
 def write_html_report(
 	org: str,
@@ -301,6 +354,8 @@ def write_html_report(
 			"releaseDate": item.release_date,
 			"releaseAgeDays": item.release_age_days,
 			"openPullRequests": item.open_pull_requests,
+			"dependabotStatus": item.dependabot_status,
+			"dependabotError": item.dependabot_error,
 			"repoUrl": f"https://github.com/{org}/{item.repo}",
 			"releasesUrl": f"https://github.com/{org}/{item.repo}/releases",
 			"pullRequestsUrl": f"https://github.com/{org}/{item.repo}/pulls",
@@ -406,6 +461,7 @@ def write_html_report(
 				<option value="deployable">Alle deploybare</option>
 				<option value="all">Alle repoer</option>
 				<option value="released">Oppdatert i prod</option>
+				<option value="dependabot-paused">Dependabot pauset</option>
 				<option value="excluded">Ikke deploybare</option>
 				<option value="error">Kunne ikke vurderes</option>
 			</select>
@@ -449,12 +505,16 @@ def write_html_report(
 		document.querySelector("#unreleased-count").textContent = count("unreleased");
 		document.querySelector("#deployable-count").textContent = count("unreleased") + count("released");
 		document.querySelector("#excluded-count").textContent = count("excluded");
-		document.querySelector("#error-count").textContent = count("error");
+		document.querySelector("#error-count").textContent = reports.filter(
+			item => item.state === "error" || item.dependabotStatus === "error"
+		).length;
 
 		function matchesState(item) {{
 			const selected = stateFilter.value;
 			if (selected === "all") return true;
 			if (selected === "deployable") return item.state === "unreleased" || item.state === "released";
+			if (selected === "dependabot-paused") return item.dependabotStatus === "paused";
+			if (selected === "error") return item.state === "error" || item.dependabotStatus === "error";
 			return item.state === selected;
 		}}
 
@@ -476,7 +536,7 @@ def write_html_report(
 			const query = search.value.trim().toLocaleLowerCase("nb");
 			const visible = reports
 				.filter(item => matchesState(item))
-				.filter(item => `${{item.repo}} ${{item.reason}}`.toLocaleLowerCase("nb").includes(query))
+				.filter(item => `${{item.repo}} ${{item.reason}} ${{item.dependabotError}}`.toLocaleLowerCase("nb").includes(query))
 				.sort(compare);
 			rows.replaceChildren();
 			for (const item of visible) {{
@@ -531,8 +591,12 @@ def write_html_report(
 					compareLink.rel = "noreferrer";
 					compareLink.textContent = "Sammenlign";
 					detailsCell.append(compareLink);
-				}} else {{
+				}} else if (!item.dependabotError) {{
 					detailsCell.textContent = item.reason || "–";
+				}}
+				if (item.dependabotError) {{
+					if (detailsCell.childNodes.length > 0) detailsCell.append(" · ");
+					detailsCell.append(`Dependabot: ${{item.dependabotError}}`);
 				}}
 				row.append(detailsCell);
 				rows.append(row);
@@ -609,7 +673,10 @@ def main() -> int:
 			)
 		)
 
-	has_errors = any(item.state == "error" for item in assessments)
+	has_errors = any(
+		item.state == "error" or item.dependabot_status == "error"
+		for item in assessments
+	)
 	if args.markdown:
 		print_report(args.org, args.team, assessments, args.show_excluded)
 	else:

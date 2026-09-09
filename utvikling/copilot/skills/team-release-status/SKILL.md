@@ -58,6 +58,12 @@ API-feil eksplisitt; de må ikke omgjøres til eldre release-data.
 
 «Dager siden release» er antall hele døgn fra tidspunktet da siste vellykkede prod-workflow ble opprettet, målt i UTC.
 
+Dependabot-pause hentes fra `repos/{org}/{repo}/automated-security-fixes`.
+Feltet `paused` avgjør om oppdateringer er pauset. Feltet `enabled` gjelder
+Dependabot security updates og må ikke brukes til å avgjøre om vanlige
+versjonsoppdateringer fra `dependabot.yml` er aktive. HTTP 404 vises som ukjent.
+Andre feil ved oppslag skal vises eksplisitt og gjøre rapporten ufullstendig.
+
 ## Nettsiden
 
 Nettsiden viser alle teamets repoer og åpner med filteret «Venter på release».
@@ -66,6 +72,7 @@ Den inneholder:
 - oppsummeringskort for release-etterslep, deploybare repoer, utelatelser og feil
 - fritekstsøk etter repo eller utelatelsesårsak
 - statusfilter for unreleased, deploybare, oppdaterte, utelatte og feilende repoer
+- statusfilter for repoer der Dependabot er pauset
 - sorterbare kolonner
 - lenker til repo og GitHub Compare
 - egen Releases-lenke til `https://github.com/{org}/{repo}/releases`
