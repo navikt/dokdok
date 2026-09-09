@@ -69,6 +69,7 @@ Den inneholder:
 - sorterbare kolonner
 - lenker til repo og GitHub Compare
 - egen Releases-lenke til `https://github.com/{org}/{repo}/releases`
+- antall åpne pull requests med lenke til repoets pull requests
 - dato og alder i hele dager for siste produksjonsrelease
 
 Etter vellykket kjøring, returner den komplette absolutte filstien scriptet skrev

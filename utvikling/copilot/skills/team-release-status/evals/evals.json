@@ -4,13 +4,14 @@
     {
       "id": 1,
       "prompt": "Hvilke repoer i teamdokumenthandtering har endringer på main eller master som ikke er releaset til prod?",
-      "expected_output": "En lokal interaktiv HTML-side basert på GitHub-teamets repoer, med komplett filsti i resultatet, commits foran prod, siste releasedato, alder i dager og compare-lenke.",
+      "expected_output": "En lokal interaktiv HTML-side basert på GitHub-teamets repoer, med komplett filsti i resultatet, åpne pull requests, commits foran prod, siste releasedato, alder i dager og compare-lenke.",
       "files": [],
       "expectations": [
         "Repoene hentes fra GitHub-teamet, ikke fra lokalt klonede repoer.",
         "Resultatet er en selvstendig HTML-fil og viser komplett absolutt filsti.",
         "Nettsiden inneholder søk, statusfilter og sorterbare kolonner.",
         "Hvert repo har en egen lenke til repoets GitHub Releases-side.",
+        "Resultatet inneholder en sorterbar kolonne med antall åpne pull requests og lenke til repoets pull requests.",
         "Resultatet inneholder kolonnen Dager siden release.",
         "Produksjonsversjonen hentes fra siste vellykkede release-triggerede deploy-prod-workflow.",
         "Nyeste publiserte GitHub Release verifiseres direkte mot en vellykket workflow-run med samme tag."

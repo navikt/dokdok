@@ -42,6 +42,7 @@ class Assessment:
 	release_date: str = ""
 	release_age_days: int = 0
 	compare_url: str = ""
+	open_pull_requests: int | None = None
 
 
 def gh_json(endpoint: str, *, paginate: bool = False) -> Any:
@@ -119,6 +120,13 @@ def release_age_days(created_at: str, now: dt.datetime) -> int:
 	return max(0, int((now - released.astimezone(dt.UTC)).total_seconds() // 86_400))
 
 
+def open_pull_request_count(org: str, repo: str) -> int:
+	pulls = paginated_items(
+		gh_json(f"repos/{org}/{repo}/pulls?state=open&per_page=100", paginate=True)
+	)
+	return len(pulls)
+
+
 def assess_repo(
 	org: str,
 	repo: dict[str, Any],
@@ -126,10 +134,18 @@ def assess_repo(
 	now: dt.datetime,
 ) -> Assessment:
 	name = str(repo["name"])
-	if repo.get("archived"):
-		return Assessment(name, "excluded", "arkivert")
+	open_pull_requests: int | None = None
 
 	try:
+		open_pull_requests = open_pull_request_count(org, name)
+		if repo.get("archived"):
+			return Assessment(
+				name,
+				"excluded",
+				"arkivert",
+				open_pull_requests=open_pull_requests,
+			)
+
 		workflows_payload = gh_json(f"repos/{org}/{name}/actions/workflows?per_page=100")
 		workflows = workflows_payload.get("workflows", [])
 		workflow = next(
@@ -141,23 +157,43 @@ def assess_repo(
 			None,
 		)
 		if workflow is None:
-			return Assessment(name, "excluded", f"mangler aktiv {workflow_path}")
+			return Assessment(
+				name,
+				"excluded",
+				f"mangler aktiv {workflow_path}",
+				open_pull_requests=open_pull_requests,
+			)
 
 		run = latest_release_run(org, name, int(workflow["id"]))
 		if run is None:
-			return Assessment(name, "excluded", "ingen vellykket produksjonsrelease")
+			return Assessment(
+				name,
+				"excluded",
+				"ingen vellykket produksjonsrelease",
+				open_pull_requests=open_pull_requests,
+			)
 
 		release_sha = run["head_sha"]
 		default_branch = repo.get("default_branch")
 		if not default_branch:
-			return Assessment(name, "error", "repoet mangler default branch")
+			return Assessment(
+				name,
+				"error",
+				"repoet mangler default branch",
+				open_pull_requests=open_pull_requests,
+			)
 
 		head = gh_json(f"repos/{org}/{name}/commits/{quote(str(default_branch), safe='')}")
 		head_sha = head["sha"]
 		comparison = gh_json(f"repos/{org}/{name}/compare/{release_sha}...{head_sha}")
 		status = comparison.get("status")
 		if status == "diverged":
-			return Assessment(name, "error", "prod-commit og default branch har divergerte historikker")
+			return Assessment(
+				name,
+				"error",
+				"prod-commit og default branch har divergerte historikker",
+				open_pull_requests=open_pull_requests,
+			)
 
 		ahead_by = int(comparison.get("ahead_by", 0))
 		created_at = run["created_at"]
@@ -170,9 +206,15 @@ def assess_repo(
 			release_date=release_date,
 			release_age_days=release_age_days(created_at, now),
 			compare_url=compare_url,
+			open_pull_requests=open_pull_requests,
 		)
 	except (GitHubError, KeyError, TypeError, ValueError) as error:
-		return Assessment(name, "error", str(error).replace("\n", " "))
+		return Assessment(
+			name,
+			"error",
+			str(error).replace("\n", " "),
+			open_pull_requests=open_pull_requests,
+		)
 
 
 def parse_now(value: str | None) -> dt.datetime:
@@ -210,34 +252,35 @@ def print_report(
 		f"`{org}/{team}` har commits som ikke er releaset til prod.**"
 	)
 	print()
-	print("| Repo | Commits foran prod | Siste release | Dager siden release | Endringer |")
-	print("|---|---:|---:|---:|---|")
+	print("| Repo | Åpne PR-er | Commits foran prod | Siste release | Dager siden release | Endringer |")
+	print("|---|---:|---:|---:|---:|---|")
 	for item in unreleased:
 		print(
 			f"| [{item.repo}](https://github.com/{org}/{item.repo}) "
-			f"| {item.ahead_by} | {item.release_date} | {item.release_age_days} "
+			f"| {item.open_pull_requests} | {item.ahead_by} | {item.release_date} | {item.release_age_days} "
 			f"| [Sammenlign]({item.compare_url}) |"
 		)
 	if not unreleased:
-		print("| _Ingen_ | 0 | – | – | – |")
+		print("| _Ingen_ | 0 | 0 | – | – | – |")
 
 	if show_excluded and excluded:
 		print()
 		print("**Ikke vurdert som deploybare**")
 		print()
-		print("| Repo | Årsak |")
-		print("|---|---|")
+		print("| Repo | Åpne PR-er | Årsak |")
+		print("|---|---:|---|")
 		for item in excluded:
-			print(f"| {item.repo} | {item.reason} |")
+			print(f"| {item.repo} | {item.open_pull_requests} | {item.reason} |")
 
 	if errors:
 		print()
 		print("**Kunne ikke vurderes**")
 		print()
-		print("| Repo | Feil |")
-		print("|---|---|")
+		print("| Repo | Åpne PR-er | Feil |")
+		print("|---|---:|---|")
 		for item in errors:
-			print(f"| {item.repo} | {item.reason} |")
+			open_pull_requests = item.open_pull_requests if item.open_pull_requests is not None else "–"
+			print(f"| {item.repo} | {open_pull_requests} | {item.reason} |")
 
 
 def write_html_report(
@@ -257,8 +300,10 @@ def write_html_report(
 			"aheadBy": item.ahead_by,
 			"releaseDate": item.release_date,
 			"releaseAgeDays": item.release_age_days,
+			"openPullRequests": item.open_pull_requests,
 			"repoUrl": f"https://github.com/{org}/{item.repo}",
 			"releasesUrl": f"https://github.com/{org}/{item.repo}/releases",
+			"pullRequestsUrl": f"https://github.com/{org}/{item.repo}/pulls",
 			"compareUrl": item.compare_url,
 		}
 		for item in assessments
@@ -371,6 +416,7 @@ def write_html_report(
 					<tr>
 						<th data-sort="repo">Repo</th>
 						<th data-sort="state">Status</th>
+						<th class="numeric" data-sort="openPullRequests">Åpne PR-er</th>
 						<th class="numeric" data-sort="aheadBy">Commits foran prod</th>
 						<th data-sort="releaseDate">Siste release</th>
 						<th class="numeric" data-sort="releaseAgeDays">Dager siden release</th>
@@ -450,6 +496,20 @@ def write_html_report(
 				badge.textContent = labels[item.state];
 				statusCell.append(badge);
 				row.append(statusCell);
+
+				const pullRequestsCell = document.createElement("td");
+				pullRequestsCell.className = "numeric";
+				if (item.openPullRequests === null) {{
+					pullRequestsCell.textContent = "–";
+				}} else {{
+					const pullRequestsLink = document.createElement("a");
+					pullRequestsLink.href = item.pullRequestsUrl;
+					pullRequestsLink.target = "_blank";
+					pullRequestsLink.rel = "noreferrer";
+					pullRequestsLink.textContent = item.openPullRequests;
+					pullRequestsCell.append(pullRequestsLink);
+				}}
+				row.append(pullRequestsCell);
 				row.append(cell(item.state === "unreleased" ? item.aheadBy : "–", "numeric"));
 				row.append(cell(item.releaseDate || "–"));
 				row.append(cell(item.releaseDate ? item.releaseAgeDays : "–", "numeric"));
