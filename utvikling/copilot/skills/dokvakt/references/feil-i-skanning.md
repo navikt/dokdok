@@ -20,6 +20,23 @@ Bruk WinSCP og logg inn på sftp-serveren. Host og brukernavn finner du i Nav-co
 Sjekk ut hva som ligger i mappen for appen du er interessert i. Inni mappen ligger mapper navngitt etter batchen som ble kjørt, f.eks. `11.06.2026_R123400368_1_4437912`, og inni der igjen
 ligger zippede mapper for dokumentene som har feilet. Husk at filene på feilområdet må bli slettet etter at feilen er fikset.
 
+### Rekjøring etter teknisk feil
+
+Ved en forbigående teknisk feil, for eksempel en DNS-feil mot dokarkiv, kontroller først om journalposten allerede finnes i Joark:
+
+```sql
+SELECT *
+FROM t_journalpost
+WHERE kanal_referanse_id = '<filnavn>.pdf';
+```
+
+Hvis journalposten ikke finnes:
+
+1. Finn zip-filen i `SKANMOT<APPNAVN>_FEIL/<batch>`.
+2. Flytt filen direkte på SFTP-serveren til den riktige inbound-mappen. Ikke last filen ned og opp igjen, da dette kan endre eier og føre til `Permission denied`.
+3. Vent til neste planlagte kjøring, og kontroller loggene og Joark på nytt.
+4. Slett eventuelle gjenværende kopier fra feilområdet først når behandlingen er bekreftet vellykket.
+
 ### Ulike situasjoner som kan oppstå
 - Filer med feil metadata (f.eks. fil som heter `OVRIG_.pdf`). Vil ofte gi 409 CONFLICT i appen.
 
