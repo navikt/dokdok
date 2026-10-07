@@ -16,6 +16,7 @@ applyTo: "**/*.java"
 - Use `_` for unused vars (Java 22+)
 - Comments/error text preferably Norwegian; keep technical terms in English
 - Prefer `"...%s...".formatted()` over `String.format()`
+- Whenever writing javadoc, use markdown javadoc (Java 23+)
 
 ## Naming
 
